@@ -6,6 +6,8 @@ import {
   StyleSheet,
   TextInput,
   Text,
+  Image,
+  View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";
 export default function LoginPage() {
@@ -14,6 +16,11 @@ export default function LoginPage() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Image
+        style={{ width: 250, height: 250 }}
+        source={require("./assets/logo.png")}
+      />
+      <Text style={styles.heading}>Welcome!</Text>
       <TextInput
         placeholder="Username"
         inputMode="text"
@@ -25,9 +32,16 @@ export default function LoginPage() {
         style={styles.textInput}
       />
       <Pressable style={globalStyles.button}>
-        <Text style={{ color: "dodgerblue" }}>Login</Text>
+        <Text style={globalStyles.buttonText}>Log in</Text>
       </Pressable>
-      <Button title="Login" style={globalStyles.button} />
+      {/* <Button title="Login" style={globalStyles.button} /> */}
+      <View style={styles.hRule} />
+      <Text style={{ fontSize: 20, color: "white", fontWeight: 500 }}>
+        First time user?
+      </Text>
+      <Pressable style={globalStyles.button}>
+        <Text style={globalStyles.buttonText}>Sign up</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
@@ -37,10 +51,18 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     flexGrow: 1,
-    backgroundColor: "#e5e6ff",
-    justifyContent: "center",
+    backgroundColor: "#262626",
+    justifyContent: "space-evenly",
     alignItems: "center",
-    gap: 10,
+  },
+  heading: {
+    fontSize: 30,
+    color: "white",
+    fontWeight: "600",
+    fontFamily: "",
+  },
+  text: {
+    color: "white",
   },
   textInput: {
     width: "75%",
@@ -48,7 +70,12 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderColor: "black",
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 50,
     padding: 10,
+  },
+  hRule: {
+    width: "90%",
+    borderBottomColor: "white",
+    borderBottomWidth: "1px",
   },
 });

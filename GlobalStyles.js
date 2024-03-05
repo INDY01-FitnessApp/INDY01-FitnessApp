@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 
 const globalStyles = StyleSheet.create({
   button: {
-    backgroundColor: "white",
+    backgroundColor: "#ff950f",
     borderWidth: 1,
     borderColor: "black",
     width: "30%",
@@ -10,6 +10,11 @@ const globalStyles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 10,
+  },
+
+  buttonText: {
+    color: "white",
   },
 });
 
