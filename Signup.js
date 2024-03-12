@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";
-export default function LoginPage({ navigation }) {
+export default function SignupPage({ navigation }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -30,22 +30,27 @@ export default function LoginPage({ navigation }) {
         inputMode="text"
         style={styles.textInput}
       />
+      <TextInput
+        placeholder="Confirm password"
+        inputMode="text"
+        style={styles.textInput}
+      />
       <Pressable
         style={globalStyles.button}
         onPressOut={() => navigation.navigate("home")}
       >
-        <Text style={globalStyles.buttonText}>Log in</Text>
+        <Text style={globalStyles.buttonText}>Sign up</Text>
       </Pressable>
       {/* <Button title="Login" style={globalStyles.button} /> */}
       <View style={styles.hRule} />
       <Text style={{ fontSize: 20, color: "white", fontWeight: 500 }}>
-        First time user?
+        Already have an account?
       </Text>
       <Pressable
         style={globalStyles.button}
-        onPressOut={() => navigation.navigate("signup")}
+        onPressOut={() => navigation.navigate("login")}
       >
-        <Text style={globalStyles.buttonText}>Sign up</Text>
+        <Text style={globalStyles.buttonText}>Log in</Text>
       </Pressable>
     </SafeAreaView>
   );
