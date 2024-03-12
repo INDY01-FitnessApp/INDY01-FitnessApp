@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";
-export default function LoginPage() {
+export default function LoginPage({ navigation }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -31,7 +31,10 @@ export default function LoginPage() {
         inputMode="text"
         style={styles.textInput}
       />
-      <Pressable style={globalStyles.button}>
+      <Pressable
+        style={globalStyles.button}
+        onPressOut={() => navigation.navigate("home")}
+      >
         <Text style={globalStyles.buttonText}>Log in</Text>
       </Pressable>
       {/* <Button title="Login" style={globalStyles.button} /> */}
