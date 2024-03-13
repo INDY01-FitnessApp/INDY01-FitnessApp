@@ -6,12 +6,15 @@ import {
   Text,
   Pressable,
 } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import globalStyles from "./GlobalStyles";
 import "react-native-gesture-handler";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import NewTripCreator from "./Trip";
 
 function HomeComponent() {
+  const navigation = useNavigation();
   return (
     <SafeAreaView style={styles.container}>
       <View
@@ -28,7 +31,10 @@ function HomeComponent() {
         <Text style={[globalStyles.heading, { textAlign: "center" }]}>
           Ready to start a new trip?
         </Text>
-        <Pressable style={globalStyles.button}>
+        <Pressable
+          style={globalStyles.button}
+          onPressOut={() => navigation.navigate("newTripCreator")}
+        >
           <Text style={globalStyles.buttonText}>
             {Platform.OS === "ios" ? "Start new trip ↦" : "Start new trip"}
           </Text>
@@ -38,15 +44,27 @@ function HomeComponent() {
   );
 }
 
-export default function Home() {
+function HomePage() {
+  return (
+    <Stack.Navigator
+      initialRouteName="home"
+      screenOptions={{ headerShown: false }}
+    >
+      <Stack.Screen name="home" component={HomeComponent} />
+      <Stack.Screen name="newTripCreator" component={NewTripCreator} />
+    </Stack.Navigator>
+  );
+}
+
+export default function MainView() {
   return (
     <Drawer.Navigator
-      initialRouteName="homeC"
+      initialRouteName="homePage"
       screenOptions={{ headerShown: true, drawerType: "front" }}
     >
       <Drawer.Screen
-        name="homeC"
-        component={HomeComponent}
+        name="homePage"
+        component={HomePage}
         options={{ title: "Home" }}
       />
       <Drawer.Screen
@@ -67,7 +85,7 @@ export default function Home() {
     </Drawer.Navigator>
   );
 }
-
+const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
 const styles = StyleSheet.create({
   container: {

@@ -32,7 +32,7 @@ export default function LoginPage({ navigation }) {
       />
       <Pressable
         style={globalStyles.button}
-        onPressOut={() => navigation.replace("home")} // Replace() stops the user from accidentaly swiping back to the signup or login screens
+        onPressOut={() => navigation.replace("main")} // Replace() stops the user from accidentaly swiping back to the signup or login screens
       >
         <Text style={globalStyles.buttonText}>Log in</Text>
       </Pressable>
