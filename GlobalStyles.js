@@ -24,6 +24,8 @@ const globalStyles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontSize: 20,
+    textAlign: "center",
+    textAlignVertical: "center",
   },
   horizontalRule: {
     width: "90%",

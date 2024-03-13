@@ -1,4 +1,11 @@
-import { View, StyleSheet, SafeAreaView, Text, Pressable } from "react-native";
+import {
+  Platform,
+  View,
+  StyleSheet,
+  SafeAreaView,
+  Text,
+  Pressable,
+} from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import globalStyles from "./GlobalStyles";
@@ -14,7 +21,7 @@ function HomeComponent() {
           justifyContent: "space-between",
           flexDirection: "column",
           marginTop: 90,
-          height: 130,
+          height: 180,
           width: "70%",
         }}
       >
@@ -22,7 +29,9 @@ function HomeComponent() {
           Ready to start a new trip?
         </Text>
         <Pressable style={globalStyles.button}>
-          <Text style={globalStyles.buttonText}>Start new trip →</Text>
+          <Text style={globalStyles.buttonText}>
+            {Platform.OS === "ios" ? "Start new trip ↦" : "Start new trip"}
+          </Text>
         </Pressable>
       </View>
     </SafeAreaView>
