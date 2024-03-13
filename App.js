@@ -25,7 +25,7 @@ export default function App() {
 const Stack = createNativeStackNavigator();
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    display: "flex",
     backgroundColor: "dodgerblue",
     alignItems: "center",
     justifyContent: "center",

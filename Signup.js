@@ -19,7 +19,7 @@ export default function SignupPage({ navigation }) {
         style={{ width: 250, height: 250 }}
         source={require("./assets/logo.png")}
       />
-      <Text style={styles.heading}>Welcome!</Text>
+      <Text style={globalStyles.heading}>Welcome!</Text>
       <TextInput
         placeholder="Username"
         inputMode="text"
@@ -42,7 +42,7 @@ export default function SignupPage({ navigation }) {
         <Text style={globalStyles.buttonText}>Sign up</Text>
       </Pressable>
       {/* <Button title="Login" style={globalStyles.button} /> */}
-      <View style={styles.hRule} />
+      <View style={globalStyles.horizontalRule} />
       <Text style={{ fontSize: 20, color: "white", fontWeight: 500 }}>
         Already have an account?
       </Text>

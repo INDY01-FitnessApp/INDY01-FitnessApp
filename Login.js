@@ -19,7 +19,7 @@ export default function LoginPage({ navigation }) {
         style={{ width: 250, height: 250 }}
         source={require("./assets/logo.png")}
       />
-      <Text style={styles.heading}>Welcome!</Text>
+      <Text style={globalStyles.heading}>Welcome!</Text>
       <TextInput
         placeholder="Username"
         inputMode="text"
@@ -37,7 +37,7 @@ export default function LoginPage({ navigation }) {
         <Text style={globalStyles.buttonText}>Log in</Text>
       </Pressable>
       {/* <Button title="Login" style={globalStyles.button} /> */}
-      <View style={styles.hRule} />
+      <View style={globalStyles.horizontalRule} />
       <Text style={{ fontSize: 20, color: "white", fontWeight: 500 }}>
         First time user?
       </Text>
@@ -60,12 +60,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
     alignItems: "center",
   },
-  heading: {
-    fontSize: 30,
-    color: "white",
-    fontWeight: "600",
-    fontFamily: "",
-  },
   text: {
     color: "white",
   },
@@ -77,10 +71,5 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 50,
     padding: 10,
-  },
-  hRule: {
-    width: "90%",
-    borderBottomColor: "white",
-    borderBottomWidth: "1px",
   },
 });
