@@ -8,5 +8,5 @@ const storage = new Storage({
   // Write async methods that run if the code tries to access a key or key-id in storage that does not exist
   sync: {},
 });
-
+const allKeys = ["trip", "currentTrip"]; // Store all keys here, so we have a record of every key in storage
 export default storage;

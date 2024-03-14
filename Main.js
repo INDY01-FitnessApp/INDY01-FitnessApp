@@ -5,41 +5,80 @@ import {
   SafeAreaView,
   Text,
   Pressable,
+  Button,
 } from "react-native";
 import { NavigationContainer, useNavigation } from "@react-navigation/native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import globalStyles from "./GlobalStyles";
 import "react-native-gesture-handler";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import NewTripCreator from "./Trip";
+import { NewTripCreator, TripView } from "./Trip";
+import storage from "./LocalStorage";
+import { useState } from "react";
 
 function HomeComponent() {
   const navigation = useNavigation();
+  const [hasCurrentTrip, setHasCurrentTrip] = useState(false);
+
+  storage
+    .load({ key: "currentTrip" })
+    .then((ret) => setHasCurrentTrip(!!ret))
+    .catch((err) => {
+      if (err.name != "NotFoundError") console.warn(err);
+    });
   return (
     <SafeAreaView style={styles.container}>
-      <View
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexDirection: "column",
-          marginTop: 90,
-          height: 180,
-          width: "70%",
-        }}
-      >
-        <Text style={[globalStyles.heading, { textAlign: "center" }]}>
-          Ready to start a new trip?
-        </Text>
-        <Pressable
-          style={globalStyles.button}
-          onPressOut={() => navigation.navigate("newTripCreator")}
+      {hasCurrentTrip ? (
+        <View
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexDirection: "column",
+            marginTop: 90,
+            height: 180,
+            width: "70%",
+          }}
         >
-          <Text style={globalStyles.buttonText}>
-            {Platform.OS === "ios" ? "Start new trip ↦" : "Start new trip"}
+          <Text style={[globalStyles.heading, { textAlign: "center" }]}>
+            Ready to exercise?
           </Text>
-        </Pressable>
-      </View>
+          <Pressable
+            style={globalStyles.button}
+            onPressOut={() => navigation.replace("tripView")}
+          >
+            <Text style={globalStyles.buttonText}>Continue trip</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <View
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexDirection: "column",
+            marginTop: 90,
+            height: 180,
+            width: "70%",
+          }}
+        >
+          <Text style={[globalStyles.heading, { textAlign: "center" }]}>
+            Ready to start a new trip?
+          </Text>
+          <Pressable
+            style={globalStyles.button}
+            onPressOut={() => navigation.navigate("newTripCreator")}
+          >
+            <Text style={globalStyles.buttonText}>Start new trip</Text>
+          </Pressable>
+        </View>
+      )}
+      <Button
+        title="Clear data"
+        onPress={() => {
+          storage.remove({ key: "currentTrip" });
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -52,6 +91,7 @@ function HomePage() {
     >
       <Stack.Screen name="home" component={HomeComponent} />
       <Stack.Screen name="newTripCreator" component={NewTripCreator} />
+      <Stack.Screen name="tripView" component={TripView} />
     </Stack.Navigator>
   );
 }
