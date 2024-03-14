@@ -10,8 +10,9 @@ import {
 } from "react-native";
 import globalStyles from "./GlobalStyles";
 export default function SignupPage({ navigation }) {
-  const [username, setUsername] = useState("FirstName");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -32,26 +33,36 @@ export default function SignupPage({ navigation }) {
       <TextInput
         placeholder="Last name"
         inputMode="text"
+        onChangeText={(text) => setLastName(text)}
+        value={lastName}
         style={styles.textInput}
       />
       <TextInput
         placeholder="Email"
         inputMode="text"
+        onChangeText={(text) => setEmail(text)}
+        value={email}
         style={styles.textInput}
       />
       <TextInput
         placeholder="Username"
         inputMode="text"
+        onChangeText={(text) => setUsername(text)}
+        value={username}
         style={styles.textInput}
       />
       <TextInput
         placeholder="Password"
         inputMode="text"
+        onChangeText={(text) => setPassword(text)}
+        value={password}
         style={styles.textInput}
       />
       <TextInput
         placeholder="Confirm password"
         inputMode="text"
+        onChangeText={(text) => setConfirmPassword(text)}
+        value={confirmPassword}
         style={styles.textInput}
       />
       <Pressable
