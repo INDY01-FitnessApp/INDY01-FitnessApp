@@ -10,8 +10,11 @@ import {
 } from "react-native";
 import globalStyles from "./GlobalStyles";
 export default function SignupPage({ navigation }) {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState("FirstName");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
 
   return (
     <SafeAreaView style={styles.container}>
@@ -20,6 +23,22 @@ export default function SignupPage({ navigation }) {
         source={require("./assets/logo.png")}
       />
       <Text style={globalStyles.heading}>Welcome!</Text>
+      <TextInput
+        placeholder="First name"
+        onChangeText={(text) => setFirstName(text)}
+        value={firstName}
+        style={styles.textInput}
+      />
+      <TextInput
+        placeholder="Last name"
+        inputMode="text"
+        style={styles.textInput}
+      />
+      <TextInput
+        placeholder="Email"
+        inputMode="text"
+        style={styles.textInput}
+      />
       <TextInput
         placeholder="Username"
         inputMode="text"
@@ -37,7 +56,10 @@ export default function SignupPage({ navigation }) {
       />
       <Pressable
         style={globalStyles.button}
-        onPressOut={() => navigation.replace("home")} // Replace() stops the user from accidentaly swiping back to the signup or login screens
+        onPressOut={() => {
+          console.log(firstName);
+          navigation.replace("home");
+        }} // Replace() stops the user from accidentaly swiping back to the signup or login screens
       >
         <Text style={globalStyles.buttonText}>Sign up</Text>
       </Pressable>
