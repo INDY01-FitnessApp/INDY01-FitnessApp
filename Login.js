@@ -23,11 +23,15 @@ export default function LoginPage({ navigation }) {
       <TextInput
         placeholder="Username"
         inputMode="text"
+        onChangeText={(text) => setUsername(text)}
+        value={username}
         style={styles.textInput}
       />
       <TextInput
         placeholder="Password"
         inputMode="text"
+        onChangeText={(text) => setPassword(text)}
+        value={password}
         style={styles.textInput}
       />
       <Pressable
