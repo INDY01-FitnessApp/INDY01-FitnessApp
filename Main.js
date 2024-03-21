@@ -15,7 +15,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NewTripCreator, TripView } from "./Trip";
 import storage from "./LocalStorage";
 import { useState } from "react";
-
+import Profile from "./Profile";
 function HomeComponent() {
   const navigation = useNavigation();
   const [hasCurrentTrip, setHasCurrentTrip] = useState(false);
@@ -108,9 +108,9 @@ export default function MainView() {
         options={{ title: "Home" }}
       />
       <Drawer.Screen
-        name="home1"
-        component={HomeComponent}
-        options={{ title: "Page2" }}
+        name="profile"
+        component={Profile}
+        options={{ title: "Profile" }}
       />
       <Drawer.Screen
         name="home2"
