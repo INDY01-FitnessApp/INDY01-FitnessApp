@@ -15,7 +15,10 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NewTripCreator, TripView } from "./Trip";
 import storage from "./LocalStorage";
 import { useState } from "react";
-
+import * as SQLite from 'expo-sqlite';
+import { insertProfileInfo, insertDistanceTraveled, insertCurrentTrip, getData, updateDistanceTraveled, updateCurrentDistance } from "./Database.ts"
+import { helper, fetch } from "./Signup.js"
+fetch('huggy');
 function HomeComponent() {
   const navigation = useNavigation();
   const [hasCurrentTrip, setHasCurrentTrip] = useState(false);
@@ -97,7 +100,8 @@ function HomePage() {
 }
 
 export default function MainView() {
-  return (
+    helper('god');
+    return (
     <Drawer.Navigator
       initialRouteName="homePage"
       screenOptions={{ headerShown: true, drawerType: "front" }}
@@ -105,7 +109,7 @@ export default function MainView() {
       <Drawer.Screen
         name="homePage"
         component={HomePage}
-        options={{ title: "Home" }}
+        options={{ title: 'Home' }}
       />
       <Drawer.Screen
         name="home1"

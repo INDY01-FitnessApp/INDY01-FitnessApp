@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native";
 import MainView from "./Main";
 import LoginPage from "./Login";
 import SignupPage from "./Signup";
+import * as SQLite from 'expo-sqlite';
 
 export default function App() {
   return (
