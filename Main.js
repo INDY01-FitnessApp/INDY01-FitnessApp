@@ -18,7 +18,6 @@ import { useState } from "react";
 import * as SQLite from 'expo-sqlite';
 import { insertProfileInfo, insertDistanceTraveled, insertCurrentTrip, getData, updateDistanceTraveled, updateCurrentDistance } from "./Database.ts"
 import { helper, fetch } from "./Signup.js"
-fetch('huggy');
 function HomeComponent() {
   const navigation = useNavigation();
   const [hasCurrentTrip, setHasCurrentTrip] = useState(false);
@@ -100,7 +99,7 @@ function HomePage() {
 }
 
 export default function MainView() {
-    helper('god');
+    //helper('god');
     return (
     <Drawer.Navigator
       initialRouteName="homePage"

@@ -9,10 +9,28 @@ import {
   View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";
+import * as SQLite from 'expo-sqlite';
+import { getData } from "./Database.ts"
+import { helper, fetch } from "./Signup.js"
+fetch('god');
 export default function LoginPage({ navigation }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+    function checkLogin(password, username) {
+        const db = SQLite.openDatabase('User_Information.db');
 
+        const dbPass = getData(db, password, 'Personal_Info', 'all');
+        console.log('Password: ',dbPass);
+        if (dbPass == []) {
+            console.log('Password does not exist');
+        }
+        const dbUser = getData(db, password, 'Personal_Info', 'username');
+        const dbUsername = [dbUser];
+        const dbPassword = [dbPass]
+        //console.log(dbUsername);
+        //console.log(dbPassword);
+        navigation.replace("main")
+    }
   return (
     <SafeAreaView style={styles.container}>
       <Image
@@ -36,7 +54,7 @@ export default function LoginPage({ navigation }) {
       />
       <Pressable
         style={globalStyles.button}
-        onPressOut={() => navigation.replace("main")} // Replace() stops the user from accidentaly swiping back to the signup or login screens
+        onPressOut={() => checkLogin(password, username)} // Replace() stops the user from accidentaly swiping back to the signup or login screens
       >
         <Text style={globalStyles.buttonText}>Log in</Text>
       </Pressable>

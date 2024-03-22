@@ -53,6 +53,7 @@ parameters:
     const readOnly = true;
     const result_array = [];
     const result = '';
+
     if (table == 'Personal_Info') {
         db.transactionAsync(async tx => {
             const result = await tx.executeSqlAsync(

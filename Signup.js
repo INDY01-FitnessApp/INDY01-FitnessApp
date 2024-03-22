@@ -21,14 +21,13 @@ const db = SQLite.openDatabase('User_Information.db');
 //db.deleteAsync();
 
 export function fetch(password) {
-    //create table for  storing user's basic information
     const db = SQLite.openDatabase('User_Information.db');
+    //create table for  storing user's basic information
     db.transaction(tx => {
         tx.executeSql(
             'CREATE TABLE IF NOT EXISTS User_Info(Password TEXT PRIMARY KEY, Username TEXT NOT NULL UNIQUE, Email TEXT NOT NULL, Lastname TEXT NOT NULL, Firstname TEXT)'
         )
     })
-
     //create table for storing user's total distance and number of trips completed
     db.transaction(tx => {
         tx.executeSql(
