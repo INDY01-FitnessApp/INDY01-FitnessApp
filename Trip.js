@@ -13,15 +13,35 @@ import { useEffect, useState, useRef } from "react";
 import * as Location from "expo-location"; // TODO: Discuss replacing this with Pedometer
 /*
 New Trips will have:
-Start location (in lat. and long.) (string)
-End location (in lat. and long.)
+Origin (string)
+Origin coords (in lat. and long.) (numbers)
+Destination
+Destination coords(in lat. and long.)
 Start date (Date)
 End date (null if in progress) (Date)
 Total distance traveled (double)
 Time spent exercising (in ms) (double)
 */
-async function createNewTrip(name, start, destination, navigation) {
-  let trip = new Trip(name, start, destination);
+// Saves trip to storage and then navigates to the trip view
+async function createNewTrip(
+  name,
+  origin,
+  originLat,
+  originLon,
+  destination,
+  destinationLat,
+  destinationLon,
+  navigation
+) {
+  let trip = new Trip(
+    name,
+    origin,
+    originLat,
+    originLon,
+    destination,
+    destinationLat,
+    destinationLon
+  );
   storage
     .save({
       key: "currentTrip",
@@ -55,10 +75,21 @@ function distanceLatLon(lat1, lon1, lat2, lon2) {
 }
 
 class Trip {
-  constructor(name, start, destination) {
+  constructor(
+    name = "",
+    origin = "",
+    originLat = 0,
+    originLon = 0,
+    destination = "",
+    destinationLat = 0,
+    destinationLon = 0
+  ) {
     this.name = name;
-    this.startLocation = start;
-    this.endLocation = destination;
+    this.origin = origin;
+    this.originCoords = [originLat, originLon];
+    this.originCoords = [0, 0];
+    this.destination = destination;
+    this.destinationCoords = [destinationLat, destinationLon];
     this.startDate = new Date().toLocaleDateString();
     this.endDate = null;
     this.distanceTraveled = 0;
@@ -72,7 +103,16 @@ function TripPreset(props) {
     <Pressable
       style={[styles.card, props.top ? { marginTop: 10 } : {}]}
       onPressOut={() => {
-        createNewTrip(props.name, props.start, props.destination, navigation);
+        createNewTrip(
+          props.name,
+          props.origin,
+          props.originLat,
+          props.originLon,
+          props.destination,
+          props.destinationLat,
+          props.destinationLon,
+          navigation
+        );
       }}
     >
       <View
@@ -82,7 +122,7 @@ function TripPreset(props) {
         }}
       >
         <View>
-          <Text style={styles.cardText}>Start: {props.start}</Text>
+          <Text style={styles.cardText}>Start: {props.origin}</Text>
           <Text style={styles.cardText}>Destination: {props.destination}</Text>
         </View>
         <Image />
@@ -92,7 +132,7 @@ function TripPreset(props) {
 }
 
 export function TripView() {
-  const [trip, setTrip] = useState(new Trip("...", "...", "..."));
+  const [trip, setTrip] = useState(new Trip());
   const [location, setLocation] = useState(null);
   const [prevLocation, setPrevLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(
@@ -203,11 +243,11 @@ export function TripView() {
         <View>
           <Text style={globalStyles.heading}>Current trip</Text>
           <Text style={globalStyles.heading}>
-            From {trip.startLocation} to {trip.endLocation}, started on{" "}
+            From {trip.origin} to {trip.destination}, started on{" "}
             {trip.startDate}
           </Text>
           <Text style={globalStyles.heading}>
-            Distance traveled: {distanceTraveled.toFixed(5)} miles
+            Distance traveled: {distanceTraveled.toFixed(2)} miles
           </Text>
         </View>
       )}
@@ -217,8 +257,16 @@ export function TripView() {
 export function NewTripCreator() {
   return (
     <SafeAreaView style={styles.container}>
-      <TripPreset name="Trip 1" start="here" destination="there" top={true} />
-      <TripPreset name="Trip 2" start="here" destination="there" />
+      <TripPreset
+        name="Marietta Campus - Kenessaw Campus"
+        origin="KSU Marietta"
+        originLat={33.94070244119528}
+        originLon={-84.52045994166129}
+        destination="KSU Kennesaw"
+        destinationLat={34.03837620837588}
+        destinationLon={-84.58152878773443}
+        top={true}
+      />
     </SafeAreaView>
   );
 }

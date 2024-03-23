@@ -16,6 +16,7 @@ import { NewTripCreator, TripView } from "./Trip";
 import storage from "./LocalStorage";
 import { useState } from "react";
 import Profile from "./Profile";
+import TripMap from "./TripMap";
 function HomeComponent() {
   const navigation = useNavigation();
   const [hasCurrentTrip, setHasCurrentTrip] = useState(false);
@@ -113,8 +114,8 @@ export default function MainView() {
         options={{ title: "Profile" }}
       />
       <Drawer.Screen
-        name="home2"
-        component={HomeComponent}
+        name="map"
+        component={TripMap}
         options={{ title: "Page3" }}
       />
       <Drawer.Screen
