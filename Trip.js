@@ -1,3 +1,4 @@
+// TODO: use Turf.js to improve geospatial calculations
 import {
   SafeAreaView,
   View,
@@ -5,12 +6,20 @@ import {
   Pressable,
   StyleSheet,
   Image,
+  Dimensions,
 } from "react-native";
 import storage from "./LocalStorage";
 import globalStyles from "./GlobalStyles";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState, useRef } from "react";
 import * as Location from "expo-location"; // TODO: Discuss replacing this with Pedometer
+import { requestRoute, distanceLatLon } from "./routeInformation";
+import MapView, { Marker, Polyline } from "react-native-maps";
+import { default as PolylineDecoder } from "@mapbox/polyline"; // Aliasing because the default export is 'polyline' which is too similar to 'Polyline' from react-native-maps
+
+const { width, height } = Dimensions.get("window");
+const ASPECT_RATIO = width / height;
+const SPACE = 0.04;
 /*
 New Trips will have:
 Origin (string)
@@ -53,27 +62,6 @@ async function createNewTrip(
     .catch((err) => console.log(err));
 }
 
-function deg2rad(deg) {
-  return deg * (Math.PI / 180);
-}
-
-// Returns distance between two coordinate points in miles
-function distanceLatLon(lat1, lon1, lat2, lon2) {
-  // Uses the haversine formula to calculate the distance betwen 2 points on a sphere
-  var R = 6371; // Radius of the earth in km
-  var dLat = deg2rad(lat2 - lat1);
-  var dLon = deg2rad(lon2 - lon1);
-  var a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(deg2rad(lat1)) *
-      Math.cos(deg2rad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  var d = R * c; // Distance in km
-  return d / 1.609344; // Distance in mi
-}
-
 class Trip {
   constructor(
     name = "",
@@ -87,7 +75,6 @@ class Trip {
     this.name = name;
     this.origin = origin;
     this.originCoords = [originLat, originLon];
-    this.originCoords = [0, 0];
     this.destination = destination;
     this.destinationCoords = [destinationLat, destinationLon];
     this.startDate = new Date().toLocaleDateString();
@@ -132,17 +119,73 @@ function TripPreset(props) {
 }
 
 export function TripView() {
-  const [trip, setTrip] = useState(new Trip());
+  // This is such a mess holy shit
+  const [trip, setTrip] = useState(null);
   const [location, setLocation] = useState(null);
   const [prevLocation, setPrevLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(
     "Please provide access to your location"
   );
+
   const [status, setStatus] = useState(null);
   const [distanceTraveled, setDistanceTraveled] = useState(0);
   const locationCheckInterval = 10000; // 100000ms = 1sec
   const accuracyLevel = Location.Accuracy.Highest;
 
+  const [route, setRoute] = useState(null);
+  const [mapRegion, setMapRegion] = useState(null);
+  const [originMarkerCoords, setOriginMarkerCoords] = useState({
+    latitude: 0,
+    longitude: 0,
+  });
+  const [destinationMarkerCoords, setDestinationMarkerCoords] = useState({
+    latitude: 0,
+    longitude: 0,
+  });
+  const [fullPathCoords, setFullPathCoords] = useState([]);
+  const [shortPathCoords, setShortPathCoords] = useState([]);
+  function setPolylineCoordsFromGeoJSON(arr, setter) {
+    const coords = [];
+    arr.forEach((pair) => {
+      coords.push({
+        latitude: pair[0],
+        longitude: pair[1],
+      });
+    });
+    setter(coords);
+  }
+  // Given a line of given length defined by a set of coordinate pairs and a number from 0.00 - 1.00 p, calculates the line that is p percent along the original line
+  // Not the "correct" way but close enough for a prototype
+  function getLineAlongLine(coords, p) {
+    if (coords.length == 0) return [];
+    return coords.slice(0, Math.floor(coords.length * p));
+  }
+  // Returns a Region object descirping where the MapView should be centered and the span of coordinates to display
+  function getRegionFromCoords(
+    originLat,
+    originLon,
+    destinationLat,
+    destinationLon
+  ) {
+    const d = distanceLatLon(
+      originLat,
+      originLon,
+      destinationLat,
+      destinationLon
+    );
+    const centerLat = (originLat + destinationLat) / 2;
+    const centerLon = (originLon + destinationLon) / 2;
+    const dLat = Math.abs(destinationLat - originLat);
+    const dLon = Math.abs(destinationLon - originLon);
+    const latDelta = dLat * 1.1 + SPACE;
+    const lonDelta = latDelta;
+    return {
+      latitude: centerLat,
+      longitude: centerLon,
+      latitudeDelta: latDelta,
+      longitudeDelta: lonDelta,
+    };
+  }
   function useInterval(callback, delay) {
     const savedCallback = useRef();
 
@@ -175,12 +218,12 @@ export function TripView() {
         setTrip(ret);
         setDistanceTraveled(ret.distanceTraveled);
       });
-    console.log("Requesting location permissions");
+    console.log("Requesting initial location permissions");
     Location.requestForegroundPermissionsAsync({
       accuracy: accuracyLevel,
     }).then((res) => {
       _status = res.status;
-      console.log("Location permissions: " + _status);
+      console.log("Initial location permissions: " + _status);
       if (_status !== "granted") {
         setErrorMsg(
           "Permission to access location was denied. Please allow location access in your settings."
@@ -188,26 +231,71 @@ export function TripView() {
         return;
       }
       setErrorMsg(null);
-      console.log("Accessing location");
+      console.log("Accessing inital location");
       Location.getCurrentPositionAsync({
         accuracy: accuracyLevel,
       }).then((res) => {
-        console.log("Location accessed");
+        console.log("Initial Location accessed");
         setPrevLocation(res);
         setStatus(_status); // Needs to be here so that the repeated location updates don't happen until this happens
       });
     });
   }, []);
 
+  // Request route information about the trip
+  useEffect(() => {
+    if (trip) {
+      requestRoute(
+        trip.originCoords[0],
+        trip.originCoords[1],
+        trip.destinationCoords[0],
+        trip.destinationCoords[1]
+      )
+        .then((res) => {
+          setRoute(res["routes"][0]);
+        })
+        .catch((err) => console.log("Error: " + err.message));
+    }
+  }, [trip]);
+
+  // Update the map visuals when the route is updated
+  useEffect(() => {
+    if (route) {
+      setMapRegion(
+        getRegionFromCoords(
+          trip.originCoords[0],
+          trip.originCoords[1],
+          trip.destinationCoords[0],
+          trip.destinationCoords[1]
+        )
+      );
+      setOriginMarkerCoords({
+        latitude: trip.originCoords[0],
+        longitude: trip.originCoords[1],
+      });
+      setDestinationMarkerCoords({
+        latitude: trip.destinationCoords[0],
+        longitude: trip.destinationCoords[1],
+      });
+      let decodedPolyline = PolylineDecoder.decode(
+        route["polyline"]["encodedPolyline"],
+        5
+      );
+      setPolylineCoordsFromGeoJSON(decodedPolyline, setFullPathCoords);
+      let sLine = getLineAlongLine(decodedPolyline, 0.4);
+      setPolylineCoordsFromGeoJSON(sLine, setShortPathCoords);
+    }
+  }, [route]);
+
   useInterval(() => {
     if (status == "granted") {
       // Update the distance in here
-      console.log("Accessing location");
+      // console.log("Accessing location");
       Location.getCurrentPositionAsync({
         accuracy: accuracyLevel,
       })
         .then((res) => {
-          console.log("Location accessed");
+          // console.log("Location accessed");
           let { latitude: lat1, longitude: lon1 } = prevLocation.coords;
           let { latitude: lat2, longitude: lon2 } = res.coords;
           let dist = distanceLatLon(lat1, lon1, lat2, lon2);
@@ -235,18 +323,47 @@ export function TripView() {
   // TODO: style this better
   return (
     <SafeAreaView style={styles.container}>
+      <MapView
+        style={{
+          width: "100%",
+          height: "75%",
+          flexGrow: 1,
+        }}
+        region={mapRegion}
+        showsMyLocationButton={false}
+        zoomEnabled={false}
+        rotateEnabled={false}
+        pitchEnabled={false}
+        scrollEnabled={false}
+        loadingEnabled={true}
+        moveOnMarkerPress={false}
+        followsUserLocation={false}
+      >
+        <Marker title="Origin" coordinate={originMarkerCoords} />
+        <Marker title="Destination" coordinate={destinationMarkerCoords} />
+        <Polyline
+          coordinates={fullPathCoords}
+          strokeColor="#888"
+          strokeWidth={2}
+        />
+        <Polyline
+          coordinates={shortPathCoords}
+          strokeColor="#00f"
+          strokeWidth={5}
+        />
+      </MapView>
       {errorMsg ? (
-        <View>
+        <View style={styles.tripInfoContainer}>
           <Text style={styles.errorText}>{errorMsg}</Text>
         </View>
       ) : (
-        <View>
-          <Text style={globalStyles.heading}>Current trip</Text>
-          <Text style={globalStyles.heading}>
+        <View style={styles.tripInfoContainer}>
+          <Text style={styles.tripText}>Current trip</Text>
+          <Text style={styles.tripText}>
             From {trip.origin} to {trip.destination}, started on{" "}
             {trip.startDate}
           </Text>
-          <Text style={globalStyles.heading}>
+          <Text style={styles.tripText}>
             Distance traveled: {distanceTraveled.toFixed(2)} miles
           </Text>
         </View>
@@ -267,6 +384,15 @@ export function NewTripCreator() {
         destinationLon={-84.58152878773443}
         top={true}
       />
+      <TripPreset
+        name="New York Hotel, Las Vegas - Times Square, NYC "
+        origin="New York-New York Hotel, Las Vegas"
+        originLat={36.10225333213965}
+        originLon={-115.1744225029821}
+        destination="Times Square, NYC"
+        destinationLat={40.75816158788552}
+        destinationLon={-73.9855318740191}
+      />
     </SafeAreaView>
   );
 }
@@ -276,10 +402,19 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "column",
     justifyContent: "flex-start",
-    alignItems: "flex-start",
+    // alignItems: "flex-start",
     backgroundColor: globalStyles.palette.backgroundDark,
-    padding: 10,
     height: "100%",
+  },
+  tripInfoContainer: {
+    flexShrink: 1,
+    paddingTop: 10,
+  },
+  tripText: {
+    fontSize: 20,
+    color: "white",
+    fontWeight: "600",
+    fontFamily: "",
   },
   card: {
     borderRadius: "10%",
