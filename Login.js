@@ -9,10 +9,27 @@ import {
   View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from './firebaseConfig.js'
+
 export default function LoginPage({ navigation }) {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  //allows existing users to login
+    function login(email, password) {
+
+        signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+            const user = userCredential.user;
+            navigation.replace("main")
+            console.log(user);
+        })
+            .catch((error) => {
+                const errcode = error.code;
+                const errmessage = error.message;
+                console.log(errcode, errmessage);
+            })
+    }
   return (
     <SafeAreaView style={styles.container}>
       <Image
@@ -21,10 +38,10 @@ export default function LoginPage({ navigation }) {
       />
       <Text style={globalStyles.heading}>Welcome!</Text>
       <TextInput
-        placeholder="Username"
+        placeholder="Email"
         inputMode="text"
-        onChangeText={(text) => setUsername(text)}
-        value={username}
+        onChangeText={(text) => setEmail(text)}
+        value={email}
         style={styles.textInput}
       />
       <TextInput
@@ -36,7 +53,7 @@ export default function LoginPage({ navigation }) {
       />
       <Pressable
         style={globalStyles.button}
-        onPressOut={() => navigation.replace("main")} // Replace() stops the user from accidentaly swiping back to the signup or login screens
+        onPressOut={() => login(email, password)} // Replace() stops the user from accidentaly swiping back to the signup or login screens
       >
         <Text style={globalStyles.buttonText}>Log in</Text>
       </Pressable>

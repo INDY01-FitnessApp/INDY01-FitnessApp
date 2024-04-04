@@ -11,7 +11,7 @@ import {
 import globalStyles from "./GlobalStyles";
 import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import { auth } from './firebaseConfig.js'
-//db = firebase.database.Reference
+
 export default function SignupPage({ navigation }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -20,6 +20,7 @@ export default function SignupPage({ navigation }) {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
 
+  //allows for the creation of a new user
     async function createUser(email, password) {
 
         await(createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
