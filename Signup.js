@@ -9,6 +9,9 @@ import {
   View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";
+import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { auth } from './firebaseConfig.js'
+//db = firebase.database.Reference
 export default function SignupPage({ navigation }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -17,6 +20,19 @@ export default function SignupPage({ navigation }) {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
 
+    async function createUser(email, password) {
+
+        await(createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
+            const user = userCredential.user;
+            console.log(user);
+            navigation.replace("login");
+        })
+            .catch((error) => {
+                const errcode = error.code;
+                const errmessage = error.message;
+                console.log(errcode, errmessage);
+            }));
+    }
   return (
     <SafeAreaView style={styles.container}>
       <Image
@@ -78,7 +94,7 @@ export default function SignupPage({ navigation }) {
       </Text>
       <Pressable
         style={globalStyles.button}
-        onPressOut={() => navigation.navigate("login")}
+        onPressOut={() => createUser(email, password)}
       >
         <Text style={globalStyles.buttonText}>Log in</Text>
       </Pressable>
