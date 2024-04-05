@@ -16,6 +16,7 @@ import { NewTripCreator, TripView } from "./Trip";
 import storage from "./LocalStorage";
 import { useState } from "react";
 import Profile from "./Profile";
+import TripMap from "./TripMap";
 function HomeComponent() {
   const navigation = useNavigation();
   const [hasCurrentTrip, setHasCurrentTrip] = useState(false);
@@ -100,7 +101,14 @@ export default function MainView() {
   return (
     <Drawer.Navigator
       initialRouteName="homePage"
-      screenOptions={{ headerShown: true, drawerType: "front" }}
+      screenOptions={{
+        headerShown: true,
+        drawerType: "front",
+        headerStyle: {
+          backgroundColor: "#000",
+        },
+        headerTintColor: "#fff",
+      }}
     >
       <Drawer.Screen
         name="homePage"
@@ -111,16 +119,6 @@ export default function MainView() {
         name="profile"
         component={Profile}
         options={{ title: "Profile" }}
-      />
-      <Drawer.Screen
-        name="home2"
-        component={HomeComponent}
-        options={{ title: "Page3" }}
-      />
-      <Drawer.Screen
-        name="home3"
-        component={HomeComponent}
-        options={{ title: "Page4" }}
       />
     </Drawer.Navigator>
   );
