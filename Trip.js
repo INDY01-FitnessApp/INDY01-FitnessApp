@@ -119,6 +119,8 @@ function TripPreset(props) {
 }
 
 export function TripView() {
+  const navigation = useNavigation();
+
   // This is such a mess holy shit
   const [trip, setTrip] = useState(null);
   const [location, setLocation] = useState(null);
@@ -313,6 +315,12 @@ export function TripView() {
     }
   }, locationCheckInterval);
 
+  function endTrip(navigation) {
+    // Update distance traveled in database
+    // Reroute back to homepage
+    navigation.replace("home");
+    return;
+  }
   let text = "Waiting..";
   if (errorMsg) {
     text = errorMsg;
@@ -358,7 +366,6 @@ export function TripView() {
         </View>
       ) : (
         <View style={styles.tripInfoContainer}>
-          <Text style={styles.tripText}>Current trip</Text>
           <Text style={styles.tripText}>
             From {trip.origin} to {trip.destination}, started on{" "}
             {trip.startDate}
@@ -366,6 +373,12 @@ export function TripView() {
           <Text style={styles.tripText}>
             Distance traveled: {distanceTraveled.toFixed(2)} miles
           </Text>
+          <Pressable
+            style={globalStyles.button}
+            onPressOut={() => endTrip(navigation)}
+          >
+            <Text style={globalStyles.buttonText}>End trip</Text>
+          </Pressable>
         </View>
       )}
     </SafeAreaView>
@@ -402,13 +415,14 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "column",
     justifyContent: "flex-start",
-    // alignItems: "flex-start",
+    alignItems: "center",
     backgroundColor: globalStyles.palette.backgroundDark,
     height: "100%",
   },
   tripInfoContainer: {
     flexShrink: 1,
     paddingTop: 10,
+    width: "90%",
   },
   tripText: {
     fontSize: 20,
