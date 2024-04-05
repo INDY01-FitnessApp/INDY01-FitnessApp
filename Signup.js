@@ -10,7 +10,8 @@ import {
 } from "react-native";
 import globalStyles from "./GlobalStyles";
 import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-import { auth } from './firebaseConfig.js'
+import { app, auth, db } from './firebaseConfig.js';
+import { getDatabase, ref, get, set } from "firebase/database"
 
 export default function SignupPage({ navigation }) {
   const [username, setUsername] = useState("");
@@ -21,8 +22,8 @@ export default function SignupPage({ navigation }) {
   const [email, setEmail] = useState("");
 
   //allows for the creation of a new user
-    async function createUser(email, password) {
-
+    async function createUser(email, password, userName, firstName, lastName) {
+        
         await(createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
             const user = userCredential.user;
             console.log(user);
@@ -33,6 +34,14 @@ export default function SignupPage({ navigation }) {
                 const errmessage = error.message;
                 console.log(errcode, errmessage);
             }));
+        
+        await (set(ref(db, 'Users/' + userName), { Username: userName, FirstName: firstName, LastName: lastName, Email: email })
+            .catch((error) => {
+                const errcode = error.code;
+                const errmessage = error.message;
+                console.log(errcode, errmessage);
+            }));
+
     }
   return (
     <SafeAreaView style={styles.container}>
@@ -95,7 +104,7 @@ export default function SignupPage({ navigation }) {
       </Text>
       <Pressable
         style={globalStyles.button}
-        onPressOut={() => createUser(email, password)}
+        onPressOut={() => createUser(email, password, username, firstName, lastName)}
       >
         <Text style={globalStyles.buttonText}>Log in</Text>
       </Pressable>

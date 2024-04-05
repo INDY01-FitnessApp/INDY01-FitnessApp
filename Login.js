@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import globalStyles from "./GlobalStyles";
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from './firebaseConfig.js'
+import { auth, db } from './firebaseConfig.js'
 
 export default function LoginPage({ navigation }) {
   const [email, setEmail] = useState("");
