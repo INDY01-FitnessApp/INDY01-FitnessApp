@@ -10,13 +10,13 @@ Total exercise time
 Completed trips
 */
 export default function Profile() {
-  const [username, setUsername] = useState("Username");
-  const [firstName, setFirstName] = useState("Firstname");
-  const [lastName, setLastName] = useState("Lastname");
-  const [email, setEmail] = useState("Email");
+  const [username, setUsername] = useState("HootyHoo");
+  const [firstName, setFirstName] = useState("Hooty");
+  const [lastName, setLastName] = useState("The Owl");
+  const [email, setEmail] = useState("mascot@kennesaw.edu");
   const [completedTrips, setCompletedTrips] = useState(0);
-  const [exerciseTime, setExerciseTime] = useState(0);
-  const [distanceTraveled, setDistanceTraveled] = useState(0);
+  const [exerciseTime, setExerciseTime] = useState(1.2);
+  const [distanceTraveled, setDistanceTraveled] = useState(3.4);
   let profileAttrs = [
     { name: "Username", val: username },
     { name: "Name", val: `${firstName} ${lastName}` },
@@ -66,7 +66,7 @@ export default function Profile() {
           <Text style={styles.profileItemName}>Time spent exercising</Text>
           <Text style={styles.profileItemValue}>
             {/* This will probably change depending on the format that exercise time is stored in */}
-            {`${exerciseTime}`}
+            {`${exerciseTime} hrs`}
           </Text>
         </View>
       </View>
