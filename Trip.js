@@ -177,9 +177,14 @@ export function TripView() {
     );
     const centerLat = (originLat + destinationLat) / 2;
     const centerLon = (originLon + destinationLon) / 2;
-    const dLat = Math.abs(destinationLat - originLat);
+
+    let dLat = (d * 2) / 100;
+    if (d < 10) dLat = 0.1;
+    // if (d > 1000) dLat = 50;
+
     const dLon = Math.abs(destinationLon - originLon);
-    const latDelta = dLat * 1.1 + SPACE;
+
+    const latDelta = dLat + SPACE;
     const lonDelta = latDelta;
     return {
       latitude: centerLat,
