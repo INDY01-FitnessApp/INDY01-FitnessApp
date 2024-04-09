@@ -9,10 +9,14 @@ import {
   View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";
-import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-import { app, auth, db } from './firebaseConfig.js';
-import { getDatabase, ref, get, set } from "firebase/database"
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+} from "firebase/auth";
+import { app, auth, db } from "./firebaseConfig.js";
+import { getDatabase, ref, get, set } from "firebase/database";
 
+// TODO: Add error messages
 export default function SignupPage({ navigation }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -22,27 +26,30 @@ export default function SignupPage({ navigation }) {
   const [email, setEmail] = useState("");
 
   //allows for the creation of a new user
-    async function createUser(email, password, userName, firstName, lastName) {
-        
-        await(createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
-            const user = userCredential.user;
-            console.log(user);
-            navigation.replace("login");
-        })
-            .catch((error) => {
-                const errcode = error.code;
-                const errmessage = error.message;
-                console.log(errcode, errmessage);
-            }));
-        
-        await (set(ref(db, 'Users/' + userName), { Username: userName, FirstName: firstName, LastName: lastName, Email: email })
-            .catch((error) => {
-                const errcode = error.code;
-                const errmessage = error.message;
-                console.log(errcode, errmessage);
-            }));
+  async function createUser(email, password, userName, firstName, lastName) {
+    await createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        console.log(user);
+        navigation.replace("login");
+      })
+      .catch((error) => {
+        const errcode = error.code;
+        const errmessage = error.message;
+        console.log(errcode, errmessage);
+      });
 
-    }
+    await set(ref(db, "Users/" + userName), {
+      Username: userName,
+      FirstName: firstName,
+      LastName: lastName,
+      Email: email,
+    }).catch((error) => {
+      const errcode = error.code;
+      const errmessage = error.message;
+      console.log(errcode, errmessage);
+    });
+  }
   return (
     <SafeAreaView style={styles.container}>
       <Image
@@ -93,18 +100,9 @@ export default function SignupPage({ navigation }) {
       />
       <Pressable
         style={globalStyles.button}
-        onPressOut={() => navigation.replace("main")} // Replace() stops the user from accidentaly swiping back to the signup or login screens
-      >
-        <Text style={globalStyles.buttonText}>Sign up</Text>
-      </Pressable>
-      {/* <Button title="Login" style={globalStyles.button} /> */}
-      <View style={globalStyles.horizontalRule} />
-      <Text style={{ fontSize: 20, color: "white", fontWeight: 500 }}>
-        Already have an account?
-      </Text>
-      <Pressable
-        style={globalStyles.button}
-        onPressOut={() => createUser(email, password, username, firstName, lastName)}
+        onPressOut={() =>
+          createUser(email, password, username, firstName, lastName)
+        }
       >
         <Text style={globalStyles.buttonText}>Log in</Text>
       </Pressable>
