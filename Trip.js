@@ -131,7 +131,7 @@ export function TripView() {
 
   const [status, setStatus] = useState(null);
   const [distanceTraveled, setDistanceTraveled] = useState(0);
-  const locationCheckInterval = 10000; // 100000ms = 1sec
+  const locationCheckInterval = 10000; // 1000ms = 1sec
   const accuracyLevel = Location.Accuracy.Highest;
 
   const [route, setRoute] = useState(null);
@@ -294,9 +294,9 @@ export function TripView() {
     }
   }, [route]);
 
+  // Update the distance in here
   useInterval(() => {
     if (status == "granted") {
-      // Update the distance in here
       // console.log("Accessing location");
       Location.getCurrentPositionAsync({
         accuracy: accuracyLevel,
@@ -376,7 +376,7 @@ export function TripView() {
             {trip.startDate}
           </Text>
           <Text style={styles.tripText}>
-            Distance traveled: {distanceTraveled.toFixed(2)} miles
+            Distance traveled: {distanceTraveled} miles
           </Text>
           <Pressable
             style={globalStyles.button}
