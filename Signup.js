@@ -9,12 +9,29 @@ import {
   View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-} from "firebase/auth";
-import { app, auth, db } from "./firebaseConfig.js";
-import { getDatabase, ref, get, set } from "firebase/database";
+import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { app, auth, db } from './firebaseConfig.js';
+import { getDatabase, ref, get, set, child, push, update, onValue } from "firebase/database";
+
+/*const u = 'robby';
+const newKey = push(child(ref(db), 'Users')).key;
+const updates = {};
+updates['Users/test/LastName'] = u;
+update(ref(db), updates);
+/*
+set(ref(db, 'Users/' + 'test'), {
+    Username: 'im test',
+    FirstName: 'te',
+    LastName: 'st',
+    totalDistanace: 69.69,
+    tripsCompleted: 10
+});
+
+const userRef = ref(db, 'Users/' + '/mbolnik25' + '/Email');
+onValue(userRef, (snapshot) => {
+    const data = snapshot.val();
+    console.log(data);
+})*/
 
 // TODO: Add error messages
 export default function SignupPage({ navigation }) {
@@ -26,18 +43,42 @@ export default function SignupPage({ navigation }) {
   const [email, setEmail] = useState("");
 
   //allows for the creation of a new user
-  async function createUser(email, password, userName, firstName, lastName) {
-    await createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
         const user = userCredential.user;
-        console.log(user);
-        navigation.replace("login");
-      })
-      .catch((error) => {
-        const errcode = error.code;
-        const errmessage = error.message;
-        console.log(errcode, errmessage);
-      });
+    async function createUser(email, password, userName, firstName, lastName) {
+        await (createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
+            const user = userCredential.user;
+            console.log(user);
+            navigation.replace("login");
+        })
+            .catch((error) => {
+                const errcode = error.code;
+                const errmessage = error.message;
+                console.log(errcode, errmessage);
+            }));
+
+        //get user id
+        const user = auth.currentUser;
+        const id = user.uid;
+        console.log(id);
+
+        await (set(ref(db, 'Users/' + id), { Username: userName, FirstName: firstName, LastName: lastName, Email: email, totalDistanace: 0.0, tripsCompleted: 0, exerciseTime: 0.0 })
+            .catch((error) => {
+                const errcode = error.code;
+                const errmessage = error.message;
+                console.log(errcode, errmessage);
+            }));
+        await (set(ref(db, 'CurrentTrips/' + id), { currentTrip: 'none', currentDistance: 0, time: 0.0, origin: [0.0, 0.0], destination: [0.0, 0.0], totalDistance: 0.0 })
+            .catch((error) => {
+                const errcode = error.code;
+                const errmessage = error.message;
+                console.log(errcode, errmessage);
+            }));
+        await (set(ref(db, 'CompletedTrips/' + id + '/' + 'trip1'), { distance: 0, totalTime: 0.0, origin: [0.0, 0.0], originName: '', destination: [0.0, 0.0], destinationName: ''})
+            .catch((error) => {
+                const errcode = error.code;
+                const errmessage = error.message;
+                console.log(errcode, errmessage);
+            }));
 
     await set(ref(db, "Users/" + userName), {
       Username: userName,

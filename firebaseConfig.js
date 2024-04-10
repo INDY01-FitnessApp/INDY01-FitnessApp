@@ -21,6 +21,6 @@ export const db = getDatabase(app);
 
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = initializeAuth(app, {
-    persistance: getReactNativePersistence(ReactNativeAsyncStorage)
+    persistence: getReactNativePersistence(ReactNativeAsyncStorage)
 });
 export default app;

@@ -15,10 +15,8 @@ import { auth, db } from './firebaseConfig.js'
 export default function LoginPage({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   //allows existing users to login
     function login(email, password) {
-
         signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
             const user = userCredential.user;
             navigation.replace("main")

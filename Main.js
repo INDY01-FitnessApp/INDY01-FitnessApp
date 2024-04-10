@@ -17,10 +17,11 @@ import storage from "./LocalStorage";
 import { useState } from "react";
 import Profile from "./Profile";
 import TripMap from "./TripMap";
+import { app, auth, db } from './firebaseConfig.js';
+import { getDatabase, ref, get, set, child, push, update, onValue } from "firebase/database";
 function HomeComponent() {
   const navigation = useNavigation();
   const [hasCurrentTrip, setHasCurrentTrip] = useState(false);
-
   storage
     .load({ key: "currentTrip" })
     .then((ret) => setHasCurrentTrip(!!ret))

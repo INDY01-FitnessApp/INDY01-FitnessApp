@@ -1,6 +1,8 @@
 import { SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { useState } from "react";
 import globalStyles from "./GlobalStyles";
+import { app, auth, db } from './firebaseConfig.js';
+import { getDatabase, ref, get, set, child, push, update, onValue, query, orderByChild } from "firebase/database"
 /*
 Username
 Name
@@ -9,14 +11,64 @@ Total distance traveled
 Total exercise time
 Completed trips
 */
+/*
+function getUserInfo(user_id) {
+    const userRef = ref(db, 'Users/' + '/' + user_id + '/Email');
+    onValue(userRef, (snapshot) => {
+        const data = snapshot.val();
+        console.log(data);
+    })
+}*/
+/*
+function getUserInfo(user_id) {
+    const userRef = ref(getDatabase());
+    const data = onValue(userRef, 'Users/' + '/' + user_id + '/Email').then((snapshot) => {
+        if (snapshot.exists()) {
+            const temp = getSnapshotChildren(snaphot).map(child => ({
+                id: child.key,
+                email: snapshot.val()
+            }));
+            //console.log(temp);
+            return temp;
+        }
+        else {
+            console.log('no data');
+        }
+    }).catch((error) => {
+        console.error(error);
+    });
+}*/
+
+async function getUserInfo(user_id) {
+    const userRef = ref(db, 'Users/' + '/' + user_id);
+    const snapshot = await get(userRef);
+    const data = (snapshot.val());
+    return data;
+}
 export default function Profile() {
+  const user = auth.currentUser;
+  const id = user.uid;
+  let userInfo;
+
+  //const userEmail = await getUserInfo(id);
   const [username, setUsername] = useState("HootyHoo");
-  const [firstName, setFirstName] = useState("Hooty");
+  const [firstName, setFirstName] = useState('hooty');
   const [lastName, setLastName] = useState("The Owl");
-  const [email, setEmail] = useState("mascot@kennesaw.edu");
+  const [email, setEmail] = useState('temp');
   const [completedTrips, setCompletedTrips] = useState(0);
   const [exerciseTime, setExerciseTime] = useState(1.2);
   const [distanceTraveled, setDistanceTraveled] = useState(3.4);
+
+  // TODO: this runs 5 times???
+   getUserInfo(id).then(res => {
+        userInfo = res;
+        console.log('User is: ', userInfo);
+       setEmail(userInfo.Email);
+       setFirstName(userInfo.FirstName);
+       setLastName(userInfo.LastName);
+       setUsername(userInfo.Username);
+       setDistanceTraveled(userInfo.totalDistance);
+    });
   let profileAttrs = [
     { name: "Username", val: username },
     { name: "Name", val: `${firstName} ${lastName}` },
