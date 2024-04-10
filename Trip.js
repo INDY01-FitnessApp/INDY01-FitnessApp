@@ -1,4 +1,3 @@
-// TODO: use Turf.js to improve geospatial calculations
 import {
   SafeAreaView,
   View,
@@ -16,9 +15,9 @@ import * as Location from "expo-location"; // TODO: Discuss replacing this with 
 import { requestRoute, distanceLatLon } from "./routeInformation";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { default as PolylineDecoder } from "@mapbox/polyline"; // Aliasing because the default export is 'polyline' which is too similar to 'Polyline' from react-native-maps
-
+import lineSliceAlong from "@turf/line-slice-along";
+import { lineString } from "@turf/helpers";
 const { width, height } = Dimensions.get("window");
-const ASPECT_RATIO = width / height;
 const SPACE = 0.04;
 /*
 New Trips will have:
@@ -144,23 +143,23 @@ export function TripView() {
     latitude: 0,
     longitude: 0,
   });
+  const [fullPathLineString, setFullPathLineString] = useState(null);
   const [fullPathCoords, setFullPathCoords] = useState([]);
+  const [shortPathLineString, setShortPathLineString] = useState(null);
   const [shortPathCoords, setShortPathCoords] = useState([]);
-  function setPolylineCoordsFromGeoJSON(arr, setter) {
-    const coords = [];
-    arr.forEach((pair) => {
-      coords.push({
-        latitude: pair[0],
-        longitude: pair[1],
+  function setPolylineCoordsFromLineString(arr, setter) {
+    try {
+      const coords = [];
+      arr.coordinates.forEach((pair) => {
+        coords.push({
+          latitude: pair[0],
+          longitude: pair[1],
+        });
       });
-    });
-    setter(coords);
-  }
-  // Given a line of given length defined by a set of coordinate pairs and a number from 0.00 - 1.00 p, calculates the line that is p percent along the original line
-  // Not the "correct" way but close enough for a prototype
-  function getLineAlongLine(coords, p) {
-    if (coords.length == 0) return [];
-    return coords.slice(0, Math.floor(coords.length * p));
+      setter(coords);
+    } catch (e) {
+      console.log(e);
+    }
   }
   // Returns a Region object descirping where the MapView should be centered and the span of coordinates to display
   function getRegionFromCoords(
@@ -209,9 +208,10 @@ export function TripView() {
   }
 
   // Should only run once, does the initial setup of location
+  // Insert code to fetch existing information from the database here
   useEffect(() => {
     let _status;
-    // Load trip from data
+    // Load trip from data - REPLACE WITH FIREBASE CODE
     storage
       .load({
         key: "currentTrip",
@@ -279,29 +279,58 @@ export function TripView() {
         latitude: trip.destinationCoords[0],
         longitude: trip.destinationCoords[1],
       });
+      // Decodes the polyline into an array of coordinates
       let decodedPolyline = PolylineDecoder.decode(
         route["polyline"]["encodedPolyline"],
         5
       );
-      setPolylineCoordsFromGeoJSON(decodedPolyline, setFullPathCoords);
-      let sLine = getLineAlongLine(decodedPolyline, 0.4);
-      setPolylineCoordsFromGeoJSON(sLine, setShortPathCoords);
+      setFullPathLineString(lineString(decodedPolyline).geometry);
     }
   }, [route]);
+
+  // Updating state is asynchronous, so need to react to state changes in another useEffect
+  useEffect(() => {
+    if (fullPathLineString)
+      setPolylineCoordsFromLineString(fullPathLineString, setFullPathCoords);
+  }, [fullPathLineString]);
+
+  // Update the polyline
+  useEffect(() => {
+    if (shortPathLineString) {
+      console.log("Updating short path line coords");
+      setPolylineCoordsFromLineString(shortPathLineString, setShortPathCoords);
+    }
+  }, [shortPathLineString]);
+
+  useEffect(() => console.log("Updated"), [shortPathCoords]);
 
   useInterval(() => {
     if (status == "granted") {
       // Update the distance in here
-      // console.log("Accessing location");
+      console.log("Accessing location");
       Location.getCurrentPositionAsync({
         accuracy: accuracyLevel,
       })
         .then((res) => {
-          // console.log("Location accessed");
+          console.log("Location accessed");
           let { latitude: lat1, longitude: lon1 } = prevLocation.coords;
           let { latitude: lat2, longitude: lon2 } = res.coords;
           let dist = distanceLatLon(lat1, lon1, lat2, lon2);
-          setDistanceTraveled(distanceTraveled + dist);
+          let newDist = distanceTraveled + dist;
+          console.log("Distance travelled: " + newDist);
+          setDistanceTraveled(newDist);
+          // Update the polyline
+          let sLine = lineSliceAlong(fullPathLineString, 0, newDist, {
+            units: "miles",
+          });
+          if (sLine.geometry.coordinates.length >= 2)
+            setShortPathLineString(sLine.geometry);
+
+          // Check if trip is finished
+          if (newDist >= route["distanceMeters"] / 1609.344) {
+            // TODO: Trip finished
+            console.log("Trip completed");
+          }
         })
         .catch((err) => {
           console.log(err);
@@ -317,6 +346,7 @@ export function TripView() {
 
   function endTrip(navigation) {
     // Update distance traveled in database
+
     // Reroute back to homepage
     navigation.replace("home");
     return;
