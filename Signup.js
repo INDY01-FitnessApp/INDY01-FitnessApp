@@ -43,7 +43,6 @@ export default function SignupPage({ navigation }) {
   const [email, setEmail] = useState("");
 
   //allows for the creation of a new user
-        const user = userCredential.user;
     async function createUser(email, password, userName, firstName, lastName) {
         await (createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
             const user = userCredential.user;
