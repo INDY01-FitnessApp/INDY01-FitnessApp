@@ -44,6 +44,7 @@ export default function SignupPage({ navigation }) {
 
   //allows for the creation of a new user
     async function createUser(email, password, userName, firstName, lastName) {
+        //create a new user with email and password info
         await (createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
             const user = userCredential.user;
             console.log(user);
@@ -66,29 +67,18 @@ export default function SignupPage({ navigation }) {
                 const errmessage = error.message;
                 console.log(errcode, errmessage);
             }));
-        await (set(ref(db, 'CurrentTrips/' + id), { currentTrip: 'none', currentDistance: 0, time: 0.0, origin: [0.0, 0.0], destination: [0.0, 0.0], totalDistance: 0.0 })
+        await (set(ref(db, 'CurrentTrips/' + id), { currentTrip: 'none', currentDistance: 0, time: 0.0, origin: [0.0, 0.0], originName: '', destination: [0.0, 0.0], totalDistance: 0.0, destinationName: '' })
             .catch((error) => {
                 const errcode = error.code;
                 const errmessage = error.message;
                 console.log(errcode, errmessage);
             }));
-        await (set(ref(db, 'CompletedTrips/' + id + '/' + 'trip1'), { distance: 0, totalTime: 0.0, origin: [0.0, 0.0], originName: '', destination: [0.0, 0.0], destinationName: ''})
+        await (set(ref(db, 'CompletedTrips/' + id + '/' + 'trip1'), { distance: 0, totalTime: 0.0, origin: [0.0, 0.0], originName: '', destination: [0.0, 0.0], destinationName: '' })
             .catch((error) => {
                 const errcode = error.code;
                 const errmessage = error.message;
                 console.log(errcode, errmessage);
             }));
-
-    await set(ref(db, "Users/" + userName), {
-      Username: userName,
-      FirstName: firstName,
-      LastName: lastName,
-      Email: email,
-    }).catch((error) => {
-      const errcode = error.code;
-      const errmessage = error.message;
-      console.log(errcode, errmessage);
-    });
   }
   return (
     <SafeAreaView style={styles.container}>

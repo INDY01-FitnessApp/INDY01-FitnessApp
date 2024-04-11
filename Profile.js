@@ -19,25 +19,6 @@ function getUserInfo(user_id) {
         console.log(data);
     })
 }*/
-/*
-function getUserInfo(user_id) {
-    const userRef = ref(getDatabase());
-    const data = onValue(userRef, 'Users/' + '/' + user_id + '/Email').then((snapshot) => {
-        if (snapshot.exists()) {
-            const temp = getSnapshotChildren(snaphot).map(child => ({
-                id: child.key,
-                email: snapshot.val()
-            }));
-            //console.log(temp);
-            return temp;
-        }
-        else {
-            console.log('no data');
-        }
-    }).catch((error) => {
-        console.error(error);
-    });
-}*/
 
 async function getUserInfo(user_id) {
     const userRef = ref(db, 'Users/' + '/' + user_id);
@@ -61,8 +42,8 @@ export default function Profile() {
 
   // TODO: this runs 5 times???
    getUserInfo(id).then(res => {
-        userInfo = res;
-        console.log('User is: ', userInfo);
+       userInfo = res;
+       console.log('User is: ', userInfo);
        setEmail(userInfo.Email);
        setFirstName(userInfo.FirstName);
        setLastName(userInfo.LastName);
