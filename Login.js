@@ -11,7 +11,6 @@ import {
 import globalStyles from "./GlobalStyles";
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from './firebaseConfig.js'
-
 export default function LoginPage({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

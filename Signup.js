@@ -33,6 +33,7 @@ onValue(userRef, (snapshot) => {
     console.log(data);
 })*/
 
+
 // TODO: Add error messages
 export default function SignupPage({ navigation }) {
   const [username, setUsername] = useState("");
@@ -73,7 +74,7 @@ export default function SignupPage({ navigation }) {
                 const errmessage = error.message;
                 console.log(errcode, errmessage);
             }));
-        await (set(ref(db, 'CompletedTrips/' + id + '/' + 'trip1'), { distance: 0, totalTime: 0.0, origin: [0.0, 0.0], originName: '', destination: [0.0, 0.0], destinationName: '' })
+        await (set(ref(db, 'CompletedTrips/' + id), { })
             .catch((error) => {
                 const errcode = error.code;
                 const errmessage = error.message;
