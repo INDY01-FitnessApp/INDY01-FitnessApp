@@ -1,4 +1,3 @@
-// TODO: use Turf.js to improve geospatial calculations
 import {
   SafeAreaView,
   View,
@@ -21,8 +20,9 @@ import MapView, { Marker, Polyline } from "react-native-maps";
 import { default as PolylineDecoder } from "@mapbox/polyline"; // Aliasing because the default export is 'polyline' which is too similar to 'Polyline' from react-native-maps
 import * as dbFunctions from "./DatabaseFunctions";
 import { auth } from "./firebaseConfig";
+import lineSliceAlong from "@turf/line-slice-along";
+import { lineString } from "@turf/helpers";
 const { width, height } = Dimensions.get("window");
-const ASPECT_RATIO = width / height;
 const SPACE = 0.04;
 const POLYLINE_PRECISION = 5;
 /*
@@ -146,7 +146,9 @@ export function TripView({ route }) {
     tripRoute.polyline.encodedPolyline,
     POLYLINE_PRECISION
   );
-  let fullPathCoords = getPolylineCoordsFromGeoJSON(decodedPolyline);
+  // console.log(decodedPolyline);
+  const fullPathLineString = lineString(decodedPolyline).geometry;
+  const fullPathCoords = getPolylineCoordsFromLineString(fullPathLineString);
   //#region States
   const [prevLocation, setPrevLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(
@@ -154,6 +156,7 @@ export function TripView({ route }) {
   );
   const [status, setStatus] = useState(null);
   const [distanceTraveled, setDistanceTraveled] = useState(0);
+
   const [shortPathCoords, setShortPathCoords] = useState([]);
   //#endregion
 
@@ -213,21 +216,21 @@ export function TripView({ route }) {
     }
   }, locationCheckInterval);
 
-  function getPolylineCoordsFromGeoJSON(arr) {
+  // Given a line of given length defined by a set of coordinate pairs and a number from 0.00 - 1.00 p, calculates the line that is p percent along the original line
+  // Not the "correct" way but close enough for a prototype
+  function getLineAlongLine(coords, p) {
+    if (coords.length == 0) return [];
+    return coords.slice(0, Math.floor(coords.length * p));
+  }
+  function getPolylineCoordsFromLineString(arr) {
     const coords = [];
-    arr.forEach((pair) => {
+    arr.coordinates.forEach((pair) => {
       coords.push({
         latitude: pair[0],
         longitude: pair[1],
       });
     });
     return coords;
-  }
-  // Given a line of given length defined by a set of coordinate pairs and a number from 0.00 - 1.00 p, calculates the line that is p percent along the original line
-  // Not the "correct" way but close enough for a prototype
-  function getLineAlongLine(coords, p) {
-    if (coords.length == 0) return [];
-    return coords.slice(0, Math.floor(coords.length * p));
   }
   // Returns a Region object descirping where the MapView should be centered and the span of coordinates to display
   function getRegionFromCoords(
@@ -279,8 +282,77 @@ export function TripView({ route }) {
       }
     }, [delay]);
   }
+
+  // Should only run once, does the initial setup of location
+  useEffect(() => {
+    let _status;
+    console.log("Requesting initial location permissions");
+    Location.requestForegroundPermissionsAsync({
+      accuracy: accuracyLevel,
+    }).then((res) => {
+      _status = res.status;
+      console.log("Initial location permissions: " + _status);
+      if (_status !== "granted") {
+        setErrorMsg(
+          "Permission to access location was denied. Please allow location access in your settings."
+        );
+        return;
+      }
+      setErrorMsg(null);
+      console.log("Accessing inital location");
+      Location.getCurrentPositionAsync({
+        accuracy: accuracyLevel,
+      }).then((res) => {
+        console.log("Initial Location accessed");
+        setPrevLocation(res);
+        setStatus(_status); // Needs to be here so that the repeated location updates don't happen until this happens
+      });
+    });
+  }, []);
+
+  useInterval(() => {
+    if (status == "granted") {
+      // Update the distance in here
+      // console.log("Accessing location");
+      Location.getCurrentPositionAsync({
+        accuracy: accuracyLevel,
+      })
+        .then((res) => {
+          // console.log("Location accessed");
+          let { latitude: lat1, longitude: lon1 } = prevLocation.coords;
+          let { latitude: lat2, longitude: lon2 } = res.coords;
+          let dist = distanceLatLon(lat1, lon1, lat2, lon2);
+          let newDist = distanceTraveled + dist;
+          setDistanceTraveled(distanceTraveled + dist);
+          // Update the polyline
+          let sLine = lineSliceAlong(fullPathLineString, 0, newDist, {
+            units: "miles",
+          });
+          if (sLine.geometry.coordinates.length >= 2) {
+            setShortPathCoords(getPolylineCoordsFromLineString(sLine.geometry));
+          }
+
+          // Check if trip is finished
+          if (newDist >= route["distanceMeters"] / 1609.344) {
+            // TODO: Trip finished
+            console.log("Trip completed");
+          }
+        })
+        .catch((err) => {
+          console.log(err);
+          if (err["code"] == "E_NO_PERMISSIONS") {
+            setStatus(null);
+            setErrorMsg(
+              "Permission to access location was denied. Please allow location access in your settings."
+            );
+          }
+        });
+    }
+  }, locationCheckInterval);
+
   function endTrip(navigation) {
     // Update distance traveled in database
+
     // Reroute back to homepage
     navigation.replace("home");
     return;
@@ -346,7 +418,8 @@ export function TripView({ route }) {
             {"\n"}to {trip.destinationName}
           </Text>
           <Text style={styles.tripText}>
-            Distance traveled: {distanceTraveled} miles
+            Distance traveled: {distanceTraveled.toFixed(2)} /{" "}
+            {trip.totalDistance.toFixed(2)} miles
           </Text>
           <Pressable
             style={globalStyles.button}
