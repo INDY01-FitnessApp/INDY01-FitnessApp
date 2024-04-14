@@ -9,9 +9,22 @@ import {
   View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";
-import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-import { app, auth, db } from './firebaseConfig.js';
-import { getDatabase, ref, get, set, child, push, update, onValue } from "firebase/database";
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+} from "firebase/auth";
+import { app, auth, db } from "./firebaseConfig.js";
+import {
+  getDatabase,
+  ref,
+  get,
+  set,
+  child,
+  push,
+  update,
+  onValue,
+} from "firebase/database";
+import { startNewTrip } from "./DatabaseFunctions.js";
 
 /*const u = 'robby';
 const newKey = push(child(ref(db), 'Users')).key;
@@ -33,53 +46,45 @@ onValue(userRef, (snapshot) => {
     console.log(data);
 })*/
 
-
 // TODO: Add error messages
 export default function SignupPage({ navigation }) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("LukeZeches");
+  const [password, setPassword] = useState("123456");
+  const [confirmPassword, setConfirmPassword] = useState("123456");
+  const [firstName, setFirstName] = useState("Luke");
+  const [lastName, setLastName] = useState("Zeches");
+  const [email, setEmail] = useState("zechesl@gmail.com");
 
   //allows for the creation of a new user
-    async function createUser(email, password, userName, firstName, lastName) {
-        //create a new user with email and password info
-        await (createUserWithEmailAndPassword(auth, email, password).then((userCredential) => {
-            const user = userCredential.user;
-            console.log(user);
-            navigation.replace("login");
-        })
-            .catch((error) => {
-                const errcode = error.code;
-                const errmessage = error.message;
-                console.log(errcode, errmessage);
-            }));
+  async function createUser(email, password, userName, firstName, lastName) {
+    //create a new user with email and password info
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-        //get user id
-        const user = auth.currentUser;
-        const id = user.uid;
-        console.log(id);
+      //get user id
+      const id = auth.currentUser.uid;
 
-        await (set(ref(db, 'Users/' + id), { Username: userName, FirstName: firstName, LastName: lastName, Email: email, totalDistanace: 0.0, tripsCompleted: 0, exerciseTime: 0.0 })
-            .catch((error) => {
-                const errcode = error.code;
-                const errmessage = error.message;
-                console.log(errcode, errmessage);
-            }));
-        await (set(ref(db, 'CurrentTrips/' + id), { currentTrip: 'none', currentDistance: 0, time: 0.0, origin: [0.0, 0.0], originName: '', destination: [0.0, 0.0], totalDistance: 0.0, destinationName: '' })
-            .catch((error) => {
-                const errcode = error.code;
-                const errmessage = error.message;
-                console.log(errcode, errmessage);
-            }));
-        await (set(ref(db, 'CompletedTrips/' + id), { })
-            .catch((error) => {
-                const errcode = error.code;
-                const errmessage = error.message;
-                console.log(errcode, errmessage);
-            }));
+      await set(ref(db, "Users/" + id), {
+        Username: userName,
+        FirstName: firstName,
+        LastName: lastName,
+        Email: email,
+        totalDistanace: 0.0,
+        tripsCompleted: 0,
+        exerciseTime: 0.0,
+      });
+      startNewTrip(id, "none", "", [0, 0], "", [0, 0], 0, {});
+      await set(ref(db, "CompletedTrips/" + id), {});
+      navigation.replace("login");
+    } catch (error) {
+      const errcode = error.code;
+      const errmessage = error.message;
+      console.log(errcode, errmessage);
+    }
   }
   return (
     <SafeAreaView style={styles.container}>
@@ -135,7 +140,7 @@ export default function SignupPage({ navigation }) {
           createUser(email, password, username, firstName, lastName)
         }
       >
-        <Text style={globalStyles.buttonText}>Log in</Text>
+        <Text style={globalStyles.buttonText}>Create account</Text>
       </Pressable>
     </SafeAreaView>
   );

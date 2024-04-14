@@ -74,6 +74,10 @@ function distanceLatLon(lat1, lon1, lat2, lon2) {
       Math.sin(dLon / 2);
   var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   var d = R * c; // Distance in km
-  return d / 1.609344; // Distance in mi
+  return metersToMiles(d * 1000); // Distance in mi
 }
-export { requestRoute, distanceLatLon };
+
+function metersToMiles(d) {
+  return d / 1609.344;
+}
+export { requestRoute, distanceLatLon, metersToMiles };

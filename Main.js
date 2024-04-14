@@ -14,25 +14,32 @@ import "react-native-gesture-handler";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NewTripCreator, TripView } from "./Trip";
 import storage from "./LocalStorage";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Profile from "./Profile";
 import TripMap from "./TripMap";
-import { app, auth, db } from './firebaseConfig.js';
-import { getDatabase, ref, get, set, child, push, update, onValue } from "firebase/database";
-import * as dbFunctions from './DatabaseFunctions.js';
+import { app, auth, db } from "./firebaseConfig.js";
+import {
+  getDatabase,
+  ref,
+  get,
+  set,
+  child,
+  push,
+  update,
+  onValue,
+} from "firebase/database";
+import * as dbFunctions from "./DatabaseFunctions.js";
+import { CurrentTripContext } from "./currentTripContext.js";
 
 function HomeComponent() {
   const navigation = useNavigation();
-  const [hasCurrentTrip, setHasCurrentTrip] = useState(false);
-  storage
-    .load({ key: "currentTrip" })
-    .then((ret) => setHasCurrentTrip(!!ret))
-    .catch((err) => {
-      if (err.name != "NotFoundError") console.warn(err);
-    });
+  const [currentTrip, setCurrentTrip] = useState(null);
+  let ct = useContext(CurrentTripContext);
+  useEffect(() => setCurrentTrip(ct), []); // useContext cannot be called inside useEffect
   return (
     <SafeAreaView style={styles.container}>
-      {hasCurrentTrip ? (
+      {currentTrip && currentTrip.tripName != "none" ? (
+        // Trip exists already
         <View
           style={{
             display: "flex",
@@ -49,12 +56,15 @@ function HomeComponent() {
           </Text>
           <Pressable
             style={globalStyles.button}
-            onPressOut={() => navigation.replace("tripView")}
+            onPressOut={() =>
+              navigation.replace("tripView", { trip: currentTrip })
+            }
           >
             <Text style={globalStyles.buttonText}>Continue trip</Text>
           </Pressable>
         </View>
       ) : (
+        // Trip does not exist yet
         <View
           style={{
             display: "flex",
@@ -100,30 +110,32 @@ function HomePage() {
   );
 }
 
-export default function MainView() {
+export default function MainView({ route }) {
   return (
-    <Drawer.Navigator
-      initialRouteName="homePage"
-      screenOptions={{
-        headerShown: true,
-        drawerType: "front",
-        headerStyle: {
-          backgroundColor: "#000",
-        },
-        headerTintColor: "#fff",
-      }}
-    >
-      <Drawer.Screen
-        name="homePage"
-        component={HomePage}
-        options={{ title: "Home" }}
-      />
-      <Drawer.Screen
-        name="profile"
-        component={Profile}
-        options={{ title: "Profile" }}
-      />
-    </Drawer.Navigator>
+    <CurrentTripContext.Provider value={route.params.currentTrip}>
+      <Drawer.Navigator
+        initialRouteName="homePage"
+        screenOptions={{
+          headerShown: true,
+          drawerType: "front",
+          headerStyle: {
+            backgroundColor: "#000",
+          },
+          headerTintColor: "#fff",
+        }}
+      >
+        <Drawer.Screen
+          name="homePage"
+          component={HomePage}
+          options={{ title: "Home" }}
+        />
+        <Drawer.Screen
+          name="profile"
+          component={Profile}
+          options={{ title: "Profile" }}
+        />
+      </Drawer.Navigator>
+    </CurrentTripContext.Provider>
   );
 }
 const Stack = createNativeStackNavigator();

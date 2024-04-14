@@ -8,18 +8,23 @@ import {
   Image,
   Dimensions,
 } from "react-native";
-import storage from "./LocalStorage";
 import globalStyles from "./GlobalStyles";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState, useRef } from "react";
 import * as Location from "expo-location"; // TODO: Discuss replacing this with Pedometer
-import { requestRoute, distanceLatLon } from "./routeInformation";
+import {
+  requestRoute,
+  distanceLatLon,
+  metersToMiles,
+} from "./routeInformation";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { default as PolylineDecoder } from "@mapbox/polyline"; // Aliasing because the default export is 'polyline' which is too similar to 'Polyline' from react-native-maps
-
+import * as dbFunctions from "./DatabaseFunctions";
+import { auth } from "./firebaseConfig";
 const { width, height } = Dimensions.get("window");
 const ASPECT_RATIO = width / height;
 const SPACE = 0.04;
+const POLYLINE_PRECISION = 5;
 /*
 New Trips will have:
 Origin (string)
@@ -34,53 +39,64 @@ Time spent exercising (in ms) (double)
 // Saves trip to storage and then navigates to the trip view
 async function createNewTrip(
   name,
-  origin,
+  originName,
   originLat,
   originLon,
-  destination,
+  destinationName,
   destinationLat,
   destinationLon,
   navigation
 ) {
-  let trip = new Trip(
-    name,
-    origin,
+  const res = await requestRoute(
     originLat,
     originLon,
-    destination,
     destinationLat,
     destinationLon
   );
-  storage
-    .save({
-      key: "currentTrip",
-      data: trip,
-    })
-    .then(() => {
-      navigation.replace("tripView");
-    })
-    .catch((err) => console.log(err));
+  const route = res["routes"][0];
+  const tripDistance = metersToMiles(route.distanceMeters);
+  let trip = new Trip(
+    name,
+    originName,
+    [originLat, originLon],
+    destinationName,
+    [destinationLat, destinationLon],
+    tripDistance,
+    route
+  );
+
+  dbFunctions.startNewTrip(
+    auth.currentUser.uid,
+    name,
+    originName,
+    [originLat, originLon],
+    destinationName,
+    [destinationLat, destinationLon],
+    tripDistance,
+    route
+  );
+  navigation.replace("tripView", { trip });
 }
 
 class Trip {
   constructor(
-    name = "",
-    origin = "",
-    originLat = 0,
-    originLon = 0,
-    destination = "",
-    destinationLat = 0,
-    destinationLon = 0
+    name,
+    originName,
+    origin,
+    destinationName,
+    destination,
+    totalDistance,
+    route
   ) {
-    this.name = name;
+    this.tripName = name;
+    this.originName = originName;
     this.origin = origin;
-    this.originCoords = [originLat, originLon];
+    this.destinationName = destinationName;
     this.destination = destination;
-    this.destinationCoords = [destinationLat, destinationLon];
-    this.startDate = new Date().toLocaleDateString();
-    this.endDate = null;
-    this.distanceTraveled = 0;
-    this.exerciseTime = 0;
+    this.currentDistance = 0;
+    this.time = 0;
+    this.totalDistance = totalDistance;
+    this.route = route;
   }
 }
 
@@ -118,35 +134,86 @@ function TripPreset(props) {
   );
 }
 
-export function TripView() {
+export function TripView({ route }) {
   const navigation = useNavigation();
-
   // This is such a mess holy shit
-  const [trip, setTrip] = useState(null);
-  const [location, setLocation] = useState(null);
+  const trip = route.params.trip;
+  const locationCheckInterval = 10000; // 1000ms = 1sec
+  const accuracyLevel = Location.Accuracy.Highest;
+
+  const tripRoute = trip.route;
+  const decodedPolyline = PolylineDecoder.decode(
+    tripRoute.polyline.encodedPolyline,
+    POLYLINE_PRECISION
+  );
+  let fullPathCoords = getPolylineCoordsFromGeoJSON(decodedPolyline);
+  //#region States
   const [prevLocation, setPrevLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(
     "Please provide access to your location"
   );
-
   const [status, setStatus] = useState(null);
   const [distanceTraveled, setDistanceTraveled] = useState(0);
-  const locationCheckInterval = 10000; // 1000ms = 1sec
-  const accuracyLevel = Location.Accuracy.Highest;
-
-  const [route, setRoute] = useState(null);
-  const [mapRegion, setMapRegion] = useState(null);
-  const [originMarkerCoords, setOriginMarkerCoords] = useState({
-    latitude: 0,
-    longitude: 0,
-  });
-  const [destinationMarkerCoords, setDestinationMarkerCoords] = useState({
-    latitude: 0,
-    longitude: 0,
-  });
-  const [fullPathCoords, setFullPathCoords] = useState([]);
   const [shortPathCoords, setShortPathCoords] = useState([]);
-  function setPolylineCoordsFromGeoJSON(arr, setter) {
+  //#endregion
+
+  // Should only run once, does the initial setup of states and location
+  useEffect(() => {
+    let _status;
+    console.log("Requesting initial location permissions");
+    Location.requestForegroundPermissionsAsync({
+      accuracy: accuracyLevel,
+    }).then((res) => {
+      _status = res.status;
+      console.log("Initial location permissions: " + _status);
+      if (_status !== "granted") {
+        setErrorMsg(
+          "Permission to access location was denied. Please allow location access in your settings."
+        );
+        return;
+      }
+      setErrorMsg(null);
+      // Initialize states once location permission has been provided
+      console.log(trip.currentDistance);
+      setDistanceTraveled(trip.currentDistance);
+      console.log("Accessing inital location");
+      Location.getCurrentPositionAsync({
+        accuracy: accuracyLevel,
+      }).then((res) => {
+        console.log("Initial Location accessed");
+        setPrevLocation(res);
+        setStatus(_status); // Needs to be here so that the repeated location updates don't happen until this happens
+      });
+    });
+  }, []);
+
+  // Update the distance in here
+  useInterval(() => {
+    if (status == "granted") {
+      // console.log("Accessing location");
+      Location.getCurrentPositionAsync({
+        accuracy: accuracyLevel,
+      })
+        .then((res) => {
+          // console.log("Location accessed");
+          let { latitude: lat1, longitude: lon1 } = prevLocation.coords;
+          let { latitude: lat2, longitude: lon2 } = res.coords;
+          let dist = distanceLatLon(lat1, lon1, lat2, lon2);
+          setDistanceTraveled(distanceTraveled + dist);
+        })
+        .catch((err) => {
+          console.log(err);
+          if (err["code"] == "E_NO_PERMISSIONS") {
+            setStatus(null);
+            setErrorMsg(
+              "Permission to access location was denied. Please allow location access in your settings."
+            );
+          }
+        });
+    }
+  }, locationCheckInterval);
+
+  function getPolylineCoordsFromGeoJSON(arr) {
     const coords = [];
     arr.forEach((pair) => {
       coords.push({
@@ -154,7 +221,7 @@ export function TripView() {
         longitude: pair[1],
       });
     });
-    setter(coords);
+    return coords;
   }
   // Given a line of given length defined by a set of coordinate pairs and a number from 0.00 - 1.00 p, calculates the line that is p percent along the original line
   // Not the "correct" way but close enough for a prototype
@@ -212,125 +279,11 @@ export function TripView() {
       }
     }, [delay]);
   }
-
-  // Should only run once, does the initial setup of location
-  useEffect(() => {
-    let _status;
-    // Load trip from data
-    storage
-      .load({
-        key: "currentTrip",
-      })
-      .then((ret) => {
-        setTrip(ret);
-        setDistanceTraveled(ret.distanceTraveled);
-      });
-    console.log("Requesting initial location permissions");
-    Location.requestForegroundPermissionsAsync({
-      accuracy: accuracyLevel,
-    }).then((res) => {
-      _status = res.status;
-      console.log("Initial location permissions: " + _status);
-      if (_status !== "granted") {
-        setErrorMsg(
-          "Permission to access location was denied. Please allow location access in your settings."
-        );
-        return;
-      }
-      setErrorMsg(null);
-      console.log("Accessing inital location");
-      Location.getCurrentPositionAsync({
-        accuracy: accuracyLevel,
-      }).then((res) => {
-        console.log("Initial Location accessed");
-        setPrevLocation(res);
-        setStatus(_status); // Needs to be here so that the repeated location updates don't happen until this happens
-      });
-    });
-  }, []);
-
-  // Request route information about the trip
-  useEffect(() => {
-    if (trip) {
-      requestRoute(
-        trip.originCoords[0],
-        trip.originCoords[1],
-        trip.destinationCoords[0],
-        trip.destinationCoords[1]
-      )
-        .then((res) => {
-          setRoute(res["routes"][0]);
-        })
-        .catch((err) => console.log("Error: " + err.message));
-    }
-  }, [trip]);
-
-  // Update the map visuals when the route is updated
-  useEffect(() => {
-    if (route) {
-      setMapRegion(
-        getRegionFromCoords(
-          trip.originCoords[0],
-          trip.originCoords[1],
-          trip.destinationCoords[0],
-          trip.destinationCoords[1]
-        )
-      );
-      setOriginMarkerCoords({
-        latitude: trip.originCoords[0],
-        longitude: trip.originCoords[1],
-      });
-      setDestinationMarkerCoords({
-        latitude: trip.destinationCoords[0],
-        longitude: trip.destinationCoords[1],
-      });
-      let decodedPolyline = PolylineDecoder.decode(
-        route["polyline"]["encodedPolyline"],
-        5
-      );
-      setPolylineCoordsFromGeoJSON(decodedPolyline, setFullPathCoords);
-      let sLine = getLineAlongLine(decodedPolyline, 0.4);
-      setPolylineCoordsFromGeoJSON(sLine, setShortPathCoords);
-    }
-  }, [route]);
-
-  // Update the distance in here
-  useInterval(() => {
-    if (status == "granted") {
-      // console.log("Accessing location");
-      Location.getCurrentPositionAsync({
-        accuracy: accuracyLevel,
-      })
-        .then((res) => {
-          // console.log("Location accessed");
-          let { latitude: lat1, longitude: lon1 } = prevLocation.coords;
-          let { latitude: lat2, longitude: lon2 } = res.coords;
-          let dist = distanceLatLon(lat1, lon1, lat2, lon2);
-          setDistanceTraveled(distanceTraveled + dist);
-        })
-        .catch((err) => {
-          console.log(err);
-          if (err["code"] == "E_NO_PERMISSIONS") {
-            setStatus(null);
-            setErrorMsg(
-              "Permission to access location was denied. Please allow location access in your settings."
-            );
-          }
-        });
-    }
-  }, locationCheckInterval);
-
   function endTrip(navigation) {
     // Update distance traveled in database
     // Reroute back to homepage
     navigation.replace("home");
     return;
-  }
-  let text = "Waiting..";
-  if (errorMsg) {
-    text = errorMsg;
-  } else if (location) {
-    text = JSON.stringify(location);
   }
 
   // TODO: style this better
@@ -342,7 +295,12 @@ export function TripView() {
           height: "75%",
           flexGrow: 1,
         }}
-        region={mapRegion}
+        region={getRegionFromCoords(
+          trip.origin[0],
+          trip.origin[1],
+          trip.destination[0],
+          trip.destination[1]
+        )}
         showsMyLocationButton={false}
         zoomEnabled={false}
         rotateEnabled={false}
@@ -352,8 +310,20 @@ export function TripView() {
         moveOnMarkerPress={false}
         followsUserLocation={false}
       >
-        <Marker title="Origin" coordinate={originMarkerCoords} />
-        <Marker title="Destination" coordinate={destinationMarkerCoords} />
+        <Marker
+          title="Origin"
+          coordinate={{
+            latitude: trip.origin[0],
+            longitude: trip.origin[1],
+          }}
+        />
+        <Marker
+          title="Destination"
+          coordinate={{
+            latitude: trip.destination[0],
+            longitude: trip.destination[1],
+          }}
+        />
         <Polyline
           coordinates={fullPathCoords}
           strokeColor="#888"
@@ -372,8 +342,8 @@ export function TripView() {
       ) : (
         <View style={styles.tripInfoContainer}>
           <Text style={styles.tripText}>
-            From {trip.origin} to {trip.destination}, started on{" "}
-            {trip.startDate}
+            From {trip.originName}
+            {"\n"}to {trip.destinationName}
           </Text>
           <Text style={styles.tripText}>
             Distance traveled: {distanceTraveled} miles

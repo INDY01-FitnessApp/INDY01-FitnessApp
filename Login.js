@@ -9,24 +9,38 @@ import {
   View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from './firebaseConfig.js'
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "./firebaseConfig.js";
+import * as dbFunctions from "./DatabaseFunctions.js";
+
 export default function LoginPage({ navigation }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("zechesl@gmail.com");
+  const [password, setPassword] = useState("123456");
   //allows existing users to login
-    function login(email, password) {
-        signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
-            const user = userCredential.user;
-            navigation.replace("main")
-            console.log(user);
-        })
-            .catch((error) => {
-                const errcode = error.code;
-                const errmessage = error.message;
-                console.log(errcode, errmessage);
+  function login(email, password) {
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        console.log(`Logged in user ${user.uid}`);
+        dbFunctions
+          .getCurrentTrip(user.uid)
+          .then((trip) =>
+            navigation.replace("main", {
+              currentTrip: trip,
             })
-    }
+          )
+          .catch((error) => {
+            const errcode = error.code;
+            const errmessage = error.message;
+            console.log(errcode, errmessage);
+          });
+      })
+      .catch((error) => {
+        const errcode = error.code;
+        const errmessage = error.message;
+        console.log(errcode, errmessage);
+      });
+  }
   return (
     <SafeAreaView style={styles.container}>
       <Image
