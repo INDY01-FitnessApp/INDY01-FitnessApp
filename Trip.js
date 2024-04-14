@@ -436,7 +436,7 @@ export function NewTripCreator() {
   return (
     <SafeAreaView style={styles.container}>
       <TripPreset
-        name="Marietta Campus - Kenessaw Campus"
+        name="Marietta Campus - Kennesaw Campus"
         origin="KSU Marietta"
         originLat={33.94070244119528}
         originLon={-84.52045994166129}
