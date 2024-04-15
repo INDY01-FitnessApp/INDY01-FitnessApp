@@ -87,12 +87,6 @@ function HomeComponent() {
           </Pressable>
         </View>
       )}
-      <Button
-        title="Clear data"
-        onPress={() => {
-          storage.remove({ key: "currentTrip" });
-        }}
-      />
     </SafeAreaView>
   );
 }
