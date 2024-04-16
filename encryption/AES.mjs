@@ -121,9 +121,85 @@ const multBy3Table = [
   0x02, 0x13, 0x10, 0x15, 0x16, 0x1f, 0x1c, 0x19, 0x1a,
 ];
 
-function encrypt(text, key) {}
+function encrypt(text, key) {
+  console.log(key);
+  let roundKeys = expandKey(key);
+  console.log(roundKeys);
+}
 
-function expandKey(key) {}
+function expandKey(key) {
+  // Key is a string of hexadecimal bytes
+  const keyLength = key.length * 4; // Key length in bits, every character in the key represents 4 bits
+  const roundConstant = [
+    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
+  ];
+  let roundKeys = [];
+  let numKeys; // Number of keys needed
+  let N; // Number of 32-bit words in key
+  let K = []; // 32-bit words of OG key
+  switch (keyLength) {
+    case 128:
+      numKeys = 11;
+      N = 4;
+      break;
+    case 192:
+      numKeys = 13;
+      N = 6;
+      break;
+    case 256:
+      numKeys = 15;
+      N = 8;
+      break;
+    default:
+      throw new Error(
+        `Invalid key length! Key is length ${key.length}, should be 128, 192, or 256.`
+      );
+      break;
+  }
+
+  for (let i = 0; i < N; i++) {
+    // Split key into 32-bit (or 4 byte) words, which would be 8 hex characters long
+    K[i] = key.substring(i * 8, (i + 1) * 8);
+  }
+
+  for (let i = 0; i <= 4 * numKeys - 1; i++) {
+    if (i < N) roundKeys[i] = K[i];
+    else if (i % N == 0) {
+      let transformedWord = subWord(rotateWord(roundKeys[i - 1]));
+      let rcon = roundConstant[i / N];
+      roundKeys[i] =
+        parseInt(roundKeys[i - N], 16) ^ parseInt(transformedWord, 16) ^ rcon;
+    } else if (N > 6 && i % N == 4) {
+      let transformedWord = subWord(roundKeys[i - 1]);
+      roundKeys[i] = parseInt(roundKeys[i - N]) ^ parseInt(transformedWord, 16);
+    } else {
+      roundKeys[i] =
+        parseInt(roundKeys[i - N], 16) ^ parseInt(roundKeys[i - 1]);
+    }
+  }
+
+  return roundKeys;
+  // 1-byte left circular shift - accepts a string of 8 hex characters representing a word
+  function rotateWord(hexWordString) {
+    let firstByte = hexWordString.substring(0, 2);
+    let shiftedWord = hexWordString.substring(2, 8) + firstByte;
+    return shiftedWord;
+  }
+
+  function subWord(hexWordString) {
+    let substitutedWord = "";
+    for (let i = 0; i < 4; i++) {
+      let _byte = hexWordString.substring(i * 2, (i + 1) * 2);
+      let _mostSignificantNibble = _byte[0];
+      let _leastSignificantNibble = _byte[1];
+      let _rowIndex = parseInt(_mostSignificantNibble, 16);
+      let _colIndex = parseInt(_leastSignificantNibble, 16);
+      let _substitutedByte = subTable[_rowIndex][_colIndex];
+      substitutedWord += _substitutedByte.toString(16);
+    }
+    return substitutedWord;
+  }
+}
 
 function substituteBytes(state) {}
 
