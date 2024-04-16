@@ -76,6 +76,72 @@ const subTable = [
     0xb0, 0x54, 0xbb, 0x16,
   ],
 ];
+const invSubTable = [
+  [
+    0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e,
+    0x81, 0xf3, 0xd7, 0xfb,
+  ],
+  [
+    0x7c, 0xe3, 0x39, 0x82, 0x9b, 0x2f, 0xff, 0x87, 0x34, 0x8e, 0x43, 0x44,
+    0xc4, 0xde, 0xe9, 0xcb,
+  ],
+  [
+    0x54, 0x7b, 0x94, 0x32, 0xa6, 0xc2, 0x23, 0x3d, 0xee, 0x4c, 0x95, 0x0b,
+    0x42, 0xfa, 0xc3, 0x4e,
+  ],
+  [
+    0x08, 0x2e, 0xa1, 0x66, 0x28, 0xd9, 0x24, 0xb2, 0x76, 0x5b, 0xa2, 0x49,
+    0x6d, 0x8b, 0xd1, 0x25,
+  ],
+  [
+    0x72, 0xf8, 0xf6, 0x64, 0x86, 0x68, 0x98, 0x16, 0xd4, 0xa4, 0x5c, 0xcc,
+    0x5d, 0x65, 0xb6, 0x92,
+  ],
+  [
+    0x6c, 0x70, 0x48, 0x50, 0xfd, 0xed, 0xb9, 0xda, 0x5e, 0x15, 0x46, 0x57,
+    0xa7, 0x8d, 0x9d, 0x84,
+  ],
+  [
+    0x90, 0xd8, 0xab, 0x00, 0x8c, 0xbc, 0xd3, 0x0a, 0xf7, 0xe4, 0x58, 0x05,
+    0xb8, 0xb3, 0x45, 0x06,
+  ],
+  [
+    0xd0, 0x2c, 0x1e, 0x8f, 0xca, 0x3f, 0x0f, 0x02, 0xc1, 0xaf, 0xbd, 0x03,
+    0x01, 0x13, 0x8a, 0x6b,
+  ],
+  [
+    0x3a, 0x91, 0x11, 0x41, 0x4f, 0x67, 0xdc, 0xea, 0x97, 0xf2, 0xcf, 0xce,
+    0xf0, 0xb4, 0xe6, 0x73,
+  ],
+  [
+    0x96, 0xac, 0x74, 0x22, 0xe7, 0xad, 0x35, 0x85, 0xe2, 0xf9, 0x37, 0xe8,
+    0x1c, 0x75, 0xdf, 0x6e,
+  ],
+  [
+    0x47, 0xf1, 0x1a, 0x71, 0x1d, 0x29, 0xc5, 0x89, 0x6f, 0xb7, 0x62, 0x0e,
+    0xaa, 0x18, 0xbe, 0x1b,
+  ],
+  [
+    0xfc, 0x56, 0x3e, 0x4b, 0xc6, 0xd2, 0x79, 0x20, 0x9a, 0xdb, 0xc0, 0xfe,
+    0x78, 0xcd, 0x5a, 0xf4,
+  ],
+  [
+    0x1f, 0xdd, 0xa8, 0x33, 0x88, 0x07, 0xc7, 0x31, 0xb1, 0x12, 0x10, 0x59,
+    0x27, 0x80, 0xec, 0x5f,
+  ],
+  [
+    0x60, 0x51, 0x7f, 0xa9, 0x19, 0xb5, 0x4a, 0x0d, 0x2d, 0xe5, 0x7a, 0x9f,
+    0x93, 0xc9, 0x9c, 0xef,
+  ],
+  [
+    0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c,
+    0x83, 0x53, 0x99, 0x61,
+  ],
+  [
+    0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63,
+    0x55, 0x21, 0x0c, 0x7d,
+  ],
+];
 const multBy2Table = [
   0x00, 0x02, 0x04, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10, 0x12, 0x14, 0x16, 0x18,
   0x1a, 0x1c, 0x1e, 0x20, 0x22, 0x24, 0x26, 0x28, 0x2a, 0x2c, 0x2e, 0x30, 0x32,
@@ -122,18 +188,43 @@ const multBy3Table = [
 ];
 
 function encrypt(text, key) {
-  console.log(key);
-  let roundKeys = expandKey(key);
-  console.log(roundKeys);
+  // Generate round keys
+  const roundKeys = expandKey(key);
+  const numRounds = roundKeys.length - 1;
+  // Break text into blocks
+  const chunks = chunkText(text, 16);
+
+  let encryptedText = "";
+  chunks.forEach((chunk) => {
+    // Convert chunk into hex string
+    const hexChunk = chunk
+      .split("")
+      .map((c) => numberToHexString(c.charCodeAt(0)))
+      .join("")
+      .padStart(32, "0");
+    // XOR with first round key
+    let lastPass = XORHexStrings(hexChunk, roundKeys[0]);
+    // Perform encryption rounds
+    for (let i = 1; i <= numRounds; i++) {
+      let pass = round(lastPass, roundKeys[i], i == numRounds);
+      lastPass = pass;
+    }
+    encryptedText += lastPass;
+  });
+
+  return encryptedText;
 }
 
 function expandKey(key) {
   // Key is a string of hexadecimal bytes
   const keyLength = key.length * 4; // Key length in bits, every character in the key represents 4 bits
   const roundConstant = [
-    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36,
+    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x6c, 0xd8,
+    0xab, 0x4d, 0x9a, 0x2f, 0x5e, 0xbc, 0x63, 0xc6, 0x97, 0x35, 0x6a, 0xd4,
+    0xb3, 0x7d, 0xfa, 0xef, 0xc5,
   ];
   let roundKeys = [];
+  let keyWords = [];
   let numKeys; // Number of keys needed
   let N; // Number of 32-bit words in key
   let K = []; // 32-bit words of OG key
@@ -162,49 +253,216 @@ function expandKey(key) {
     K[i] = key.substring(i * 8, (i + 1) * 8);
   }
 
-  for (let i = 0; i <= 4 * numKeys - 1; i++) {
-    if (i < N) roundKeys[i] = K[i];
-    else if (i % N == 0) {
-      let transformedWord = subWord(rotateWord(roundKeys[i - 1]));
-      let rcon = roundConstant[i / N];
-      roundKeys[i] =
-        parseInt(roundKeys[i - N], 16) ^ parseInt(transformedWord, 16) ^ rcon;
-    } else if (N > 6 && i % N == 4) {
-      let transformedWord = subWord(roundKeys[i - 1]);
-      roundKeys[i] = parseInt(roundKeys[i - N]) ^ parseInt(transformedWord, 16);
+  for (let i = 0; i < 4 * numKeys; i += 4) {
+    if (i < N) {
+      // First 4 words - each just 4 bytes of the original key
+      keyWords = K;
     } else {
-      roundKeys[i] =
-        parseInt(roundKeys[i - N], 16) ^ parseInt(roundKeys[i - 1]);
+      let prevRoundKeyWords = keyWords.slice(i - 4, i);
+      let transformedWord = subBytes(rotateWord(prevRoundKeyWords[3]));
+      let rc = numberToHexString(roundConstant[i / 4 - 1]) + "000000";
+      let g = XORHexStrings(transformedWord, rc);
+
+      keyWords.push(XORHexStrings(prevRoundKeyWords[0], g));
+      keyWords.push(XORHexStrings(keyWords[i], prevRoundKeyWords[1]));
+      keyWords.push(XORHexStrings(keyWords[i + 1], prevRoundKeyWords[2]));
+      keyWords.push(
+        XORHexStrings(
+          keyWords[i + 2], // Previous keyWord
+          prevRoundKeyWords[3] // Corresponding keyWord from last round
+        )
+      );
     }
   }
 
+  for (let i = 0; i < 4 * numKeys; i += 4) {
+    let _roundKey = keyWords.slice(i, i + 4).join("");
+    roundKeys.push(_roundKey);
+  }
   return roundKeys;
   // 1-byte left circular shift - accepts a string of 8 hex characters representing a word
   function rotateWord(hexWordString) {
-    let firstByte = hexWordString.substring(0, 2);
-    let shiftedWord = hexWordString.substring(2, 8) + firstByte;
-    return shiftedWord;
+    try {
+      let firstByte = hexWordString.substring(0, 2);
+      let shiftedWord = hexWordString.substring(2, 8) + firstByte;
+      return shiftedWord;
+    } catch {
+      console.log();
+    }
   }
+}
 
-  function subWord(hexWordString) {
-    let substitutedWord = "";
-    for (let i = 0; i < 4; i++) {
-      let _byte = hexWordString.substring(i * 2, (i + 1) * 2);
+// Performs a round of encryption on a chunk of text (shoudln't need to pass both text and the text as a 4x4 array but oh well here we are)
+function round(text, key, isLastRound) {
+  let result = "";
+  // Substitute bytes
+  result = subBytes(text);
+  // Shift rows
+  let table = hexStringToTable(result);
+  shiftRows(table);
+  // Mix columns
+  if (!isLastRound) mixColumns(table);
+
+  result = tableToHexString(table);
+  // XOR with round key
+  result = XORHexStrings(result, key);
+  return result;
+}
+
+function shiftRows(state) {
+  // No shift on first row
+  // Shift second row by 1
+  for (let i = 1; i <= 3; i++) {
+    let row = state[i];
+    let rowStart = row.slice(0, i);
+    let rowEnd = row.slice(i, 4);
+    state[i] = rowEnd.concat(rowStart);
+  }
+}
+
+function mixColumns(state) {
+  let bytes = state.map((row) => row.map((byte) => hexStringToNumber(byte))); // Get table with numerical representation of the bytes
+  for (let col = 0; col < 4; col++) {
+    let b = [];
+    for (let row = 0; row < 4; row++) {
+      b.push(bytes[row][col]);
+    }
+    let d = [
+      multBy2Table[b[0]] ^ multBy3Table[b[1]] ^ b[2] ^ b[3],
+      multBy2Table[b[1]] ^ multBy3Table[b[2]] ^ b[3] ^ b[0],
+      multBy2Table[b[2]] ^ multBy3Table[b[3]] ^ b[0] ^ b[1],
+      multBy2Table[b[3]] ^ multBy3Table[b[0]] ^ b[1] ^ b[2],
+    ];
+    for (let row = 0; row < 4; row++) {
+      state[row][col] = numberToHexString(d[row]);
+    }
+  }
+}
+
+function subBytes(hexString) {
+  let substitutedWord = "";
+  for (let i = 0; i < hexString.length; i += 2) {
+    let _byte = hexString.substring(i, i + 2);
+    let _mostSignificantNibble = _byte[0];
+    let _leastSignificantNibble = _byte[1];
+    let _rowIndex = parseInt(_mostSignificantNibble, 16);
+    let _colIndex = parseInt(_leastSignificantNibble, 16);
+    let _substitutedByte = subTable[_rowIndex][_colIndex];
+    substitutedWord += numberToHexString(_substitutedByte);
+  }
+  return substitutedWord;
+}
+
+// Accpets a 4x4 column-major order array of bytes (as hex strings) and returns the same shape w/ substituted values
+function subBytesInTable(textTable) {
+  let substitutedTable = "";
+
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 4; j++) {
+      let _byte = textTabe[j][i];
       let _mostSignificantNibble = _byte[0];
       let _leastSignificantNibble = _byte[1];
       let _rowIndex = parseInt(_mostSignificantNibble, 16);
       let _colIndex = parseInt(_leastSignificantNibble, 16);
       let _substitutedByte = subTable[_rowIndex][_colIndex];
-      substitutedWord += _substitutedByte.toString(16);
+      substitutedTable += numberToHexString(_substitutedByte);
     }
-    return substitutedWord;
+  }
+
+  return substitutedTable;
+}
+
+function hexStringToTable(hexString) {
+  if (hexString.length != 32)
+    throw new Error(
+      `Hex string must be length 32 (16 bytes) - was given length ${hexString.length}`
+    );
+  else {
+    let bytes = [];
+    for (let i = 0; i < hexString.length; i += 2) {
+      bytes.push(hexString.substring(i, i + 2));
+    }
+    let table = [];
+    for (let i = 0; i < 4; i++) {
+      let row = [];
+      for (let j = 0; j < 4; j++) {
+        row.push(bytes[i + 4 * j]);
+      }
+      table.push(row);
+    }
+    return table;
   }
 }
 
-function substituteBytes(state) {}
+function tableToHexString(table) {
+  let result = "";
+  for (let col = 0; col < 4; col++) {
+    for (let row = 0; row < 4; row++) {
+      result += table[row][col];
+    }
+  }
+  return result;
+}
+// Returns a numerical representation of a hex string - just because I keep forgetting whether to use toString or parseInt for conversions
+function hexStringToNumber(hexString) {
+  return parseInt(hexString, 16);
+}
 
-function shiftRows(state) {}
+// Preserves a hex number by keeping it in hexadecimal, because JS keeps trying to convert it to base 10. A string of hex also makes manipulating bits easier
+function numberToHexString(hexNumber) {
+  return hexNumber.toString(16).padStart(2, "0");
+}
 
-function mixColumns(state) {}
+// Performes bitwise XOR operation in a way that constructs another hex string, without converting to a negative number (JS uses 2's complement)
+function XORHexStrings(s1, s2) {
+  if (s1.length > s2.length) {
+    s2 = s2.padStart(s1.length, "0");
+  } else if (s1.length < s2.length) {
+    s1 = s1.padStart(s2.length, "0");
+  }
+  let result = "";
+  for (let i = 0; i < s1.length; i += 2) {
+    let b1 = s1.substring(i, i + 2);
+    let b2 = s2.substring(i, i + 2);
+    b1 = hexStringToNumber(b1);
+    b2 = hexStringToNumber(b2);
+    let xor = b1 ^ b2;
+    result += xor.toString(16).padStart(2, "0");
+  }
+  return result;
+}
 
+// Counts the number of bytes in a character
+function charByteCounter(char) {
+  let ch = char.charCodeAt(0); // get char
+  let counter = 0;
+  while (ch) {
+    counter++;
+    ch = ch >> 8; // shift value down by 1 byte
+  }
+
+  return counter;
+}
+
+function chunkText(string, maxBytes) {
+  let byteCounter = 0;
+  let buildString = "";
+  const chunks = [];
+
+  for (const char of string) {
+    const bytes = charByteCounter(char);
+
+    if (byteCounter + bytes > maxBytes) {
+      chunks.push(buildString);
+      buildString = char;
+      byteCounter = bytes;
+    } else {
+      buildString += char;
+      byteCounter += bytes;
+    }
+  }
+
+  chunks.push(buildString);
+  return chunks;
+}
 export { encrypt };

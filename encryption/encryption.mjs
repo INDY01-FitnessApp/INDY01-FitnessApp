@@ -19,10 +19,10 @@ Elliptic Curve Cryptography (ECC)
 
 import { encrypt as AESEncrypt } from "./AES.mjs";
 
-let text = chunkText("Hello, world! Encrypt this!", 16);
+let text = "Hello, world! Encrypt this!";
 let key = generateRandomKey(16);
-AESEncrypt(text, "00000000000000000000000000000000");
-
+let encryptedText = AESEncrypt(text, "00000000000000000000000000000000");
+console.log(encryptedText.length);
 function charByteCounter(char) {
   let ch = char.charCodeAt(0); // get char
   let counter = 0;
@@ -32,28 +32,6 @@ function charByteCounter(char) {
   }
 
   return counter;
-}
-
-function chunkText(string, maxBytes) {
-  let byteCounter = 0;
-  let buildString = "";
-  const chunks = [];
-
-  for (const char of string) {
-    const bytes = charByteCounter(char);
-
-    if (byteCounter + bytes > maxBytes) {
-      chunks.push(buildString);
-      buildString = char;
-      byteCounter = bytes;
-    } else {
-      buildString += char;
-      byteCounter += bytes;
-    }
-  }
-
-  chunks.push(buildString);
-  return chunks;
 }
 
 function generateRandomKey(numBytes) {
