@@ -18,21 +18,31 @@ Elliptic Curve Cryptography (ECC)
 */
 
 import { encrypt as AESEncrypt, decrypt as AESDecrypt } from "./AES.mjs";
-
+import { keyGen as RSAKeyGen } from "./RSA.mjs";
 let text =
   "Kennesaw State University (KSU) is a public research university in the state of Georgia with two campuses in the Atlanta metropolitan area, one in Kennesaw and the other in Marietta on a combined 581 acres (235 ha) of land. The school was founded in 1963 by the Georgia Board of Regents using local bonds and a federal space-grant during a time of major Georgia economic expansion after World War II. KSU also holds classes at the Cobb Galleria Centre, Dalton State College, and in Paulding County (Dallas). The total enrollment exceeds 45,000 students making KSU the third-largest university by enrollment in Georgia.";
-let key = generateRandomKey(16);
-let AESStartTime = new Date().getTime();
-let encryptedText = AESEncrypt(text, key);
-let AESEncryptEndTime = new Date().getTime();
-let decryptedText = AESDecrypt(encryptedText, key);
-let AESDescryptEndTime = new Date().getTime();
-console.log(
-  `Original text: ${text}\n\nEncrypted text: ${encryptedText}\n\nDecrypted text: ${decryptedText}\n\nEncryption time: ${
-    AESEncryptEndTime - AESStartTime
-  }ms\n\nDecryption time: ${AESDescryptEndTime - AESEncryptEndTime}ms`
-);
 
+// testAES(text);
+const { publicKey, privateKey } = RSAKeyGen();
+console.log(publicKey);
+console.log(privateKey);
+function testAES(text) {
+  let key = generateRandomKey(16);
+  let AESStartTime = new Date().getTime();
+  let encryptedText = AESEncrypt(text, key);
+  let AESEncryptEndTime = new Date().getTime();
+  let decryptedText = AESDecrypt(encryptedText, key);
+  let AESDescryptEndTime = new Date().getTime();
+  console.log(
+    `Original text: ${text}\n\nEncrypted text: ${encryptedText}\n\nDecrypted text: ${decryptedText}\n\nEncryption time: ${
+      AESEncryptEndTime - AESStartTime
+    }ms\n\nDecryption time: ${AESDescryptEndTime - AESEncryptEndTime}ms`
+  );
+  return [
+    AESEncryptEndTime - AESStartTime,
+    AESDescryptEndTime - AESEncryptEndTime,
+  ];
+}
 function generateRandomKey(numBytes) {
   const key = new Uint8Array(numBytes);
   crypto.getRandomValues(key);
