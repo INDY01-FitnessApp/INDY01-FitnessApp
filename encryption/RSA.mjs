@@ -20,6 +20,28 @@ There exist techniques to speed up the modular exponentiation
 */
 import { lcm, mod } from "extra-bigint";
 import { generatePrimeSync } from "crypto";
+function encrypt(text, publicKey) {
+  // Convert text to a number by replacing every character with its utf-16 value
+  // Get UTF-16 encodings of characters
+  const buffer = Buffer.from(text, "utf16le");
+  const charCodeBytes = new Uint8Array(buffer);
+  // Construct a hex string where every character gets 2 bytes
+  let hexString = "";
+
+  // Using map() did not yield the expected results - dropped first 0
+  for (let i = 0; i < charCodeBytes.length; i += 2) {
+    // Swap first 2 bytes, convert to hex strings and add to string
+    const _firstByte = charCodeBytes[i];
+    const _secondByte = charCodeBytes[i + 1];
+    hexString += _secondByte.toString(16).padStart(2, "0");
+    hexString += _firstByte.toString(16).padStart(2, "0");
+  }
+
+  // Convert hex string to a number
+  const m = parseInt(hexString, 16);
+  console.log(m);
+}
+function decrypt(text, privateKey) {}
 function keyGen() {
   // Choose 2 large random primes of bit size 1024
   // let p = await generateRandomPrime(1024);
@@ -69,4 +91,4 @@ function modInverse(a, m) {
   return inverse;
 }
 keyGen();
-export { keyGen };
+export { keyGen, encrypt, decrypt };
