@@ -18,8 +18,9 @@ Given a cypher c and the public key (n, e), recover m using the private key (n, 
 
 There exist techniques to speed up the modular exponentiation
 */
-import { lcm, mod } from "extra-bigint";
+import { lcm as BigIntLCM, mod as BigIntMod } from "extra-bigint";
 import { generatePrimeSync } from "crypto";
+import BigNumber from "bignumber.js";
 function encrypt(text, publicKey) {
   // Convert text to a number by replacing every character with its utf-16 value
   // Get UTF-16 encodings of characters
@@ -38,10 +39,35 @@ function encrypt(text, publicKey) {
   }
 
   // Convert hex string to a number
-  const m = parseInt(hexString, 16);
+  const m = BigNumber(hexString, 16);
   console.log(m);
+  // Encode message
+  const c = modularExponentiationBigNumber(
+    m,
+    BigNumber(publicKey.e),
+    BigNumber(publicKey.n)
+  );
+  return c;
 }
-function decrypt(text, privateKey) {}
+function decrypt(ciphertext, privateKey) {
+  // Decode message number from ciphertext
+  const message = modularExponentiationBigNumber(
+    new BigNumber(ciphertext),
+    new BigNumber(privateKey.d),
+    new BigNumber(privateKey.n)
+  );
+  console.log(message);
+  // Convert message number to hex string - number of bytes should be even (if first two bytes are 00xx, will only be xx when converted back, so need to pad it)
+  let hexString = message.toString(16);
+  if ((hexString.length / 2) % 2 !== 0) hexString = "00" + hexString;
+  // Convert hex string to text
+  let text = "";
+  for (let i = 0; i < hexString.length; i += 4) {
+    let code = parseInt(hexString.substring(i, i + 4), 16);
+    text += String.fromCharCode(code);
+  }
+  return text;
+}
 function keyGen() {
   // Choose 2 large random primes of bit size 1024
   // let p = await generateRandomPrime(1024);
@@ -63,7 +89,7 @@ function EulerTotient(p, q) {
   return (p - 1n) * (q - 1n);
 }
 function CarmichaelTotient(p, q) {
-  return lcm(p - 1n, q - 1n);
+  return BigIntLCM(p - 1n, q - 1n);
 }
 function modInverse(a, m) {
   // Ensure `a` and `m` are positive integers.
@@ -89,6 +115,42 @@ function modInverse(a, m) {
   // Ensure the result is positive.
   const inverse = (old_s + m) % m;
   return inverse;
+}
+function modularExponentiation(base, exponent, modulus) {
+  if (modulus === 1) return 0;
+
+  let result = 1n;
+  base = base % modulus; // Reduce base modulo modulus to handle large base values efficiently
+
+  while (exponent > 0) {
+    if (exponent % 2n === 1n) {
+      result = (result * base) % modulus;
+    }
+
+    exponent = exponent / 2n;
+    base = (base * base) % modulus;
+  }
+
+  return result;
+}
+
+function modularExponentiationBigNumber(base, exponent, modulus) {
+  if (modulus == 1) return 0;
+
+  let result = BigNumber(1);
+  base = base.modulo(modulus); // Reduce base modulo modulus to handle large base values efficiently
+
+  while (exponent.gt(BigNumber(0))) {
+    if (exponent.idiv(BigNumber(2)) <= 1) {
+      result = result.multipliedBy(base).modulo(modulus);
+      break;
+    }
+
+    exponent = exponent.idiv(BigNumber(2));
+    base = base.multipliedBy(base).modulo(modulus);
+  }
+
+  return result;
 }
 keyGen();
 export { keyGen, encrypt, decrypt };

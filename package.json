@@ -17,6 +17,7 @@
     "@turf/helpers": "^6.5.0",
     "@turf/line-slice-along": "^6.5.0",
     "@types/react": "~18.2.45",
+    "bignumber.js": "^9.1.2",
     "expo": "~50.0.7",
     "expo-asset": "~9.0.2",
     "expo-file-system": "~16.0.8",
