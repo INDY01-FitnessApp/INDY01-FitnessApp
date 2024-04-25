@@ -4,9 +4,7 @@ import {
     SafeAreaView,
     StyleSheet,
     TextInput,
-    TextInputProps,
     Text,
-    Image,
     View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";

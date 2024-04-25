@@ -13,11 +13,12 @@ import globalStyles from "./GlobalStyles";
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { auth, db } from "./firebaseConfig.js";
 import * as dbFunctions from "./DatabaseFunctions.js";
+import { isWhiteSpaceSingleLine } from "./node_modules/typescript/lib/typescript";
 
 export default function LoginPage({ navigation }) {
     const [email, setEmail] = useState("zechesl@gmail.com");
     const [password, setPassword] = useState("123456");
-    const [errMessage, setErrMessage] = useState("kill me");
+    let [errMessage, setErrMessage] = useState("kill me");
     //allows existing users to login
     function login(email, password) {
         signInWithEmailAndPassword(auth, email, password)
@@ -40,13 +41,14 @@ export default function LoginPage({ navigation }) {
             .catch((error) => {
                 const errcode = error.code;
                 const errmessage = error.message;
-                setErrMessage = errmessage;
                 if (errcode == 'auth/invalid-credential') {
-                    console.log('Username or Password is incorrect');
-                    setErrMessage = 'Username or Password is incorrect';
+                   console.log('Username or Password is incorrect');
+                   setErrMessage('Username or Password is incorrect');
+                    
                 }
                 else if (errcode == 'auth/invalid-email') {
                     console.log('Invalid Email');
+                    setErrMessage('Invalid Email');
                 }
                 else console.log(errmessage);
             });
@@ -71,12 +73,28 @@ export default function LoginPage({ navigation }) {
                 inputMode="text"
                 onChangeText={(text) => setPassword(text)}
                 value={password}
-                style={styles.textInput}r
+                style={styles.textInput}
             />
       <Text style={{ fontSize: 15, color: "red", fontWeight: 200 }}>{errMessage}</Text>
       <Pressable
        style={globalStyles.button}
-       onPressOut={() => navigation.navigate("resetPassword")}
+                onPressOut={() => /*signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+                    const user = userCredential.user;
+                    console.log(`Logged in user ${user.uid}`);
+                    dbFunctions.getCurrentTrip(user.uid).then((trip) => navigation.replace("main", {
+                        currentTrip: trip,
+                    })).catch((error) => {
+                        const errcode = error.code;
+                        const errmessage = error.message;
+                        console.log(errcode, errmessage);
+                    });
+                    
+                }).catch((error) => {
+                    useEffect(() => {
+                        setErrMessage(error.message);
+                    },[])
+                })*/
+           navigation.navigate("resetPassword")}
        >
         <Text style={globalStyles.buttonText}>Forgot Password?</Text>
       </Pressable>
