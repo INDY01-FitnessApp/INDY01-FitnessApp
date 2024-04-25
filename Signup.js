@@ -17,12 +17,7 @@ import { app, auth, db } from "./firebaseConfig.js";
 import {
   getDatabase,
   ref,
-  get,
   set,
-  child,
-  push,
-  update,
-  onValue,
 } from "firebase/database";
 import { startNewTrip } from "./DatabaseFunctions.js";
 
@@ -54,9 +49,13 @@ export default function SignupPage({ navigation }) {
   const [firstName, setFirstName] = useState("Luke");
   const [lastName, setLastName] = useState("Zeches");
   const [email, setEmail] = useState("zechesl@gmail.com");
-
   //allows for the creation of a new user
-  async function createUser(email, password, userName, firstName, lastName) {
+  async function createUser(email, password, confirmPassword, userName, firstName, lastName) {
+    //check if both passwords match
+    if (password != confirmPassword) {
+        console.log('Passwords do not match');
+        return;
+     }
     //create a new user with email and password info
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -83,7 +82,17 @@ export default function SignupPage({ navigation }) {
     } catch (error) {
       const errcode = error.code;
       const errmessage = error.message;
-      console.log(errcode, errmessage);
+      //custom error messages
+      if (errcode == 'auth/invalid-email') {
+          console.log('Invalid Email')
+      }
+      else if (errcode == 'auth/weak-password') {
+          console.log('Password is too weak')
+      }
+      else if (errcode == 'auth/email-already-in-use') {
+          console.log('An account with this email address already exists')
+      }
+      else console.log(errcode, errmessage);
     }
   }
   return (
@@ -137,7 +146,7 @@ export default function SignupPage({ navigation }) {
       <Pressable
         style={globalStyles.button}
         onPressOut={() =>
-          createUser(email, password, username, firstName, lastName)
+          createUser(email, password, confirmPassword, username, firstName, lastName)
         }
       >
         <Text style={globalStyles.buttonText}>Create account</Text>

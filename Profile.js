@@ -2,7 +2,7 @@ import { SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { useState } from "react";
 import globalStyles from "./GlobalStyles";
 import { app, auth, db } from './firebaseConfig.js';
-import { getDatabase, ref, get, set, child, push, update, onValue, query, orderByChild } from "firebase/database"
+import { getDatabase, ref, get} from "firebase/database"
 /*
 Username
 Name
@@ -11,14 +11,6 @@ Total distance traveled
 Total exercise time
 Completed trips
 */
-/*
-function getUserInfo(user_id) {
-    const userRef = ref(db, 'Users/' + '/' + user_id + '/Email');
-    onValue(userRef, (snapshot) => {
-        const data = snapshot.val();
-        console.log(data);
-    })
-}*/
 
 async function getUserInfo(user_id) {
     const userRef = ref(db, 'Users/' + '/' + user_id);

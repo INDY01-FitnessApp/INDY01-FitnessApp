@@ -28,7 +28,6 @@ export async function getCurrentTrip(user_id) {
 }
 
 //returns a list of all completed trips
-//TO DO: check if you can get info from each trip
 export async function getCompletedTrips(user_id) {
   const userRef = ref(db, "CompletedTrips/" + "/" + user_id);
   const snapshot = await get(userRef);
