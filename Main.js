@@ -35,7 +35,13 @@ function HomeComponent() {
   const navigation = useNavigation();
   const [currentTrip, setCurrentTrip] = useState(null);
   let ct = useContext(CurrentTripContext);
-  useEffect(() => setCurrentTrip(ct), []); // useContext cannot be called inside useEffect
+  useEffect(() => {
+    dbFunctions
+      .getCurrentTrip(auth.currentUser.uid)
+      .then((res) => setCurrentTrip(res));
+
+    console.log(auth.currentUser);
+  }, []);
   return (
     <SafeAreaView style={styles.container}>
       {currentTrip && currentTrip.tripName != "none" ? (
