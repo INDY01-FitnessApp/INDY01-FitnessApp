@@ -14,11 +14,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { app, auth, db } from "./firebaseConfig.js";
-import {
-  getDatabase,
-  ref,
-  set,
-} from "firebase/database";
+import { getDatabase, ref, set } from "firebase/database";
 import { startNewTrip } from "./DatabaseFunctions.js";
 
 /*const u = 'robby';
@@ -50,12 +46,19 @@ export default function SignupPage({ navigation }) {
   const [lastName, setLastName] = useState("Zeches");
   const [email, setEmail] = useState("zechesl@gmail.com");
   //allows for the creation of a new user
-  async function createUser(email, password, confirmPassword, userName, firstName, lastName) {
+  async function createUser(
+    email,
+    password,
+    confirmPassword,
+    userName,
+    firstName,
+    lastName
+  ) {
     //check if both passwords match
     if (password != confirmPassword) {
-        console.log('Passwords do not match');
-        return;
-     }
+      console.log("Passwords do not match");
+      return;
+    }
     //create a new user with email and password info
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -83,16 +86,13 @@ export default function SignupPage({ navigation }) {
       const errcode = error.code;
       const errmessage = error.message;
       //custom error messages
-      if (errcode == 'auth/invalid-email') {
-          console.log('Invalid Email')
-      }
-      else if (errcode == 'auth/weak-password') {
-          console.log('Password is too weak')
-      }
-      else if (errcode == 'auth/email-already-in-use') {
-          console.log('An account with this email address already exists')
-      }
-      else console.log(errcode, errmessage);
+      if (errcode == "auth/invalid-email") {
+        console.log("Invalid Email");
+      } else if (errcode == "auth/weak-password") {
+        console.log("Password is too weak");
+      } else if (errcode == "auth/email-already-in-use") {
+        console.log("An account with this email address already exists");
+      } else console.log(errcode, errmessage);
     }
   }
   return (
@@ -132,6 +132,7 @@ export default function SignupPage({ navigation }) {
       <TextInput
         placeholder="Password"
         inputMode="text"
+        secureTextEntry={true}
         onChangeText={(text) => setPassword(text)}
         value={password}
         style={styles.textInput}
@@ -146,7 +147,14 @@ export default function SignupPage({ navigation }) {
       <Pressable
         style={globalStyles.button}
         onPressOut={() =>
-          createUser(email, password, confirmPassword, username, firstName, lastName)
+          createUser(
+            email,
+            password,
+            confirmPassword,
+            username,
+            firstName,
+            lastName
+          )
         }
       >
         <Text style={globalStyles.buttonText}>Create account</Text>

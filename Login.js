@@ -10,75 +10,79 @@ import {
   View,
 } from "react-native";
 import globalStyles from "./GlobalStyles";
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from "firebase/auth";
 import { auth, db } from "./firebaseConfig.js";
 import * as dbFunctions from "./DatabaseFunctions.js";
 import { isWhiteSpaceSingleLine } from "./node_modules/typescript/lib/typescript";
 
 export default function LoginPage({ navigation }) {
-    const [email, setEmail] = useState("zechesl@gmail.com");
-    const [password, setPassword] = useState("123456");
-    let [errMessage, setErrMessage] = useState("kill me");
-    //allows existing users to login
-    function login(email, password) {
-        signInWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                const user = userCredential.user;
-                console.log(`Logged in user ${user.uid}`);
-                dbFunctions
-                    .getCurrentTrip(user.uid)
-                    .then((trip) =>
-                        navigation.replace("main", {
-                            currentTrip: trip,
-                        })
-                    )
-                    .catch((error) => {
-                        const errcode = error.code;
-                        const errmessage = error.message;
-                        console.log(errcode, errmessage);
-                    });
+  const [email, setEmail] = useState("zechesl@gmail.com");
+  const [password, setPassword] = useState("123456");
+  let [errMessage, setErrMessage] = useState("kill me");
+  //allows existing users to login
+  function login(email, password) {
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        console.log(`Logged in user ${user.uid}`);
+        dbFunctions
+          .getCurrentTrip(user.uid)
+          .then((trip) =>
+            navigation.replace("main", {
+              currentTrip: trip,
             })
-            .catch((error) => {
-                const errcode = error.code;
-                const errmessage = error.message;
-                if (errcode == 'auth/invalid-credential') {
-                   console.log('Username or Password is incorrect');
-                   setErrMessage('Username or Password is incorrect');
-                    
-                }
-                else if (errcode == 'auth/invalid-email') {
-                    console.log('Invalid Email');
-                    setErrMessage('Invalid Email');
-                }
-                else console.log(errmessage);
-            });
-    }
+          )
+          .catch((error) => {
+            const errcode = error.code;
+            const errmessage = error.message;
+            console.log(errcode, errmessage);
+          });
+      })
+      .catch((error) => {
+        const errcode = error.code;
+        const errmessage = error.message;
+        if (errcode == "auth/invalid-credential") {
+          console.log("Username or Password is incorrect");
+          setErrMessage("Username or Password is incorrect");
+        } else if (errcode == "auth/invalid-email") {
+          console.log("Invalid Email");
+          setErrMessage("Invalid Email");
+        } else console.log(errmessage);
+      });
+  }
 
-    return (
+  return (
     <SafeAreaView style={styles.container}>
-            <Image
-                style={{ width: 250, height: 250 }}
-                source={require("./assets/logo.png")}
-            />
-            <Text style={globalStyles.heading}>Welcome!</Text>
-            <TextInput
-                placeholder="Email"
-                inputMode="text"
-                onChangeText={(text) => setEmail(text)}
-                value={email}
-                style={styles.textInput}
-            />
-            <TextInput
-                placeholder="Password"
-                inputMode="text"
-                onChangeText={(text) => setPassword(text)}
-                value={password}
-                style={styles.textInput}
-            />
-      <Text style={{ fontSize: 15, color: "red", fontWeight: 200 }}>{errMessage}</Text>
+      <Image
+        style={{ width: 250, height: 250 }}
+        source={require("./assets/logo.png")}
+      />
+      <Text style={globalStyles.heading}>Welcome!</Text>
+      <TextInput
+        placeholder="Email"
+        inputMode="text"
+        onChangeText={(text) => setEmail(text)}
+        value={email}
+        style={styles.textInput}
+      />
+      <TextInput
+        placeholder="Password"
+        inputMode="text"
+        secureTextEntry={true}
+        onChangeText={(text) => setPassword(text)}
+        value={password}
+        style={styles.textInput}
+      />
+      <Text style={{ fontSize: 15, color: "red", fontWeight: 200 }}>
+        {errMessage}
+      </Text>
       <Pressable
-       style={globalStyles.button}
-                onPressOut={() => /*signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
+        style={globalStyles.button}
+        onPressOut={() =>
+          /*signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
                     const user = userCredential.user;
                     console.log(`Logged in user ${user.uid}`);
                     dbFunctions.getCurrentTrip(user.uid).then((trip) => navigation.replace("main", {
@@ -94,8 +98,9 @@ export default function LoginPage({ navigation }) {
                         setErrMessage(error.message);
                     },[])
                 })*/
-           navigation.navigate("resetPassword")}
-       >
+          navigation.navigate("resetPassword")
+        }
+      >
         <Text style={globalStyles.buttonText}>Forgot Password?</Text>
       </Pressable>
       <Pressable
