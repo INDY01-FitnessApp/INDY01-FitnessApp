@@ -353,6 +353,13 @@ export function TripView({ route }) {
     }
   }, locationCheckInterval);
 
+  function endSession(navigation) {
+    const id = auth.currentUser.uid;
+    const elapsedTime = Date.now() - startTime;
+
+    dbFunctions.updateCurrentTrip(id, distanceTraveled, elapsedTime);
+    navigation.replace("home");
+  }
   function endTrip(navigation) {
     // Update distance traveled in database
     const id = auth.currentUser.uid;
@@ -443,7 +450,7 @@ export function TripView({ route }) {
           </Text>
           <Pressable
             style={globalStyles.button}
-            onPressOut={() => endTrip(navigation)}
+            onPressOut={() => endSession(navigation)}
           >
             <Text style={globalStyles.buttonText}>End trip</Text>
           </Pressable>
