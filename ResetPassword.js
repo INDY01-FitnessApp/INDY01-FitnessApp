@@ -54,8 +54,9 @@ export default function Reset_Password({ navigation }) {
             width: "100%",
             flexGrow: 1,
             backgroundColor: "#262626",
-            justifyContent: "space-evenly",
+            justifyContent: "center",
             alignItems: "center",
+            gap: "20px"
         },
         text: {
             color: "white",
