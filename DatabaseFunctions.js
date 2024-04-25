@@ -65,7 +65,7 @@ export function updateCurrentTrip(user_id, distance, time) {
     currentTrip = response;
     //add new values
     const updatedDistance = distance;
-    const updatedTime = currentTrip.time + time;
+    const updatedTime = currentTrip.exerciseTime + time;
 
     //update distance
     const distanceUpdates = {};
@@ -98,7 +98,7 @@ export function startNewTrip(
     destination: destinationCoords,
     destinationName: destination_name,
     totalDistance,
-    time: 0.0,
+    exerciseTime: 0.0,
     route,
   };
   const updates = {};
@@ -117,7 +117,7 @@ export function clearTrip(user_id) {
     destination: [0, 0],
     destinationName: "",
     totalDistance: 0,
-    time: 0.0,
+    exerciseTime: 0.0,
     polyline: "",
   };
   const updates = {};

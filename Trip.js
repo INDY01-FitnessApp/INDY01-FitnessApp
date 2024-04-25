@@ -94,7 +94,7 @@ class Trip {
     this.destinationName = destinationName;
     this.destination = destination;
     this.currentDistance = 0;
-    this.time = 0;
+    this.exerciseTime = 0;
     this.totalDistance = totalDistance;
     this.route = route;
   }
@@ -376,7 +376,7 @@ export function TripView({ route }) {
       trip.destinationName,
       trip.destination,
       trip.totalDistance,
-      trip.time
+      trip.exerciseTime + elapsedTime
     ); // Add trip to completed trips table
     dbFunctions.clearTrip(id); // Unsets the trip as the current trip from the user
 

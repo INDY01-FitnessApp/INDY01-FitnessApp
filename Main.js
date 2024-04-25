@@ -34,14 +34,30 @@ import { CurrentTripContext } from "./currentTripContext.js";
 function HomeComponent() {
   const navigation = useNavigation();
   const [currentTrip, setCurrentTrip] = useState(null);
+  const [user, setUser] = useState(null);
+  const [username, setUsername] = useState("")
   let ct = useContext(CurrentTripContext);
+  useEffect(() => {
+    dbFunctions.getUserInfo(auth.currentUser.uid).then(res => setUser(res))
+  }, [])
   useEffect(() => {
     dbFunctions
       .getCurrentTrip(auth.currentUser.uid)
       .then((res) => setCurrentTrip(res));
-
-    console.log(auth.currentUser);
   }, []);
+  useEffect(() => {
+    if (user)
+      setUsername(user.Username)
+  }, [user])
+  function msToTimeString(ms) {
+    sec = ms / 1000
+    min = Math.floor(sec / 60)
+    hr = Math.floor(min / 60)
+    minRemaining = min % 60
+    hrStr = hr.toString().padStart(2, "0")
+    minStr = minRemaining.toString().padStart(2, "0")
+    return `${hrStr}:${minStr}`
+  }
   return (
     <SafeAreaView style={styles.container}>
       {currentTrip && currentTrip.tripName != "none" ? (
@@ -53,10 +69,11 @@ function HomeComponent() {
             justifyContent: "space-between",
             flexDirection: "column",
             marginTop: 90,
-            height: 180,
+            height: 400,
             width: "70%",
           }}
         >
+          <Text style={[globalStyles.heading, {textAlign: "center"}] }>Hi {username}!</Text>
           <Text style={[globalStyles.heading, { textAlign: "center" }]}>
             Ready to exercise?
           </Text>
@@ -68,6 +85,11 @@ function HomeComponent() {
           >
             <Text style={globalStyles.buttonText}>Continue trip</Text>
           </Pressable>
+          <View >
+            <Text style={globalStyles.heading}>{currentTrip.tripName}</Text>
+            <Text style={styles.tripInfo}>Progress: {(currentTrip.currentDistance * 100 / currentTrip.totalDistance).toFixed(2)}%</Text>
+            <Text style={styles.tripInfo}>Time spent: {msToTimeString(currentTrip.exerciseTime)}</Text>
+          </View>
         </View>
       ) : (
         // Trip does not exist yet
@@ -81,7 +103,8 @@ function HomeComponent() {
             height: 180,
             width: "70%",
           }}
-        >
+          >
+            <Text style={[globalStyles.heading, {textAlign: "center"}] }>Hi {username}!</Text>
           <Text style={[globalStyles.heading, { textAlign: "center" }]}>
             Ready to start a new trip?
           </Text>
@@ -148,5 +171,10 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     backgroundColor: globalStyles.palette.backgroundDark,
     alignItems: "center",
+    gap: "20px"
   },
+  tripInfo: {
+    color: "white",
+    fontSize: 25
+  }
 });
