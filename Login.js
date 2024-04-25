@@ -21,7 +21,7 @@ import { isWhiteSpaceSingleLine } from "./node_modules/typescript/lib/typescript
 export default function LoginPage({ navigation }) {
   const [email, setEmail] = useState("zechesl@gmail.com");
   const [password, setPassword] = useState("123456");
-  let [errMessage, setErrMessage] = useState("kill me");
+  let [errMessage, setErrMessage] = useState("");
   //allows existing users to login
   function login(email, password) {
     signInWithEmailAndPassword(auth, email, password)
