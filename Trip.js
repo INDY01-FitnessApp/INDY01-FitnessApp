@@ -179,8 +179,13 @@ export function TripView({ route }) {
       setErrorMsg(null);
       // Initialize states once location permission has been provided
       setStartTime(Date.now());
-      console.log(trip.currentDistance);
       setDistanceTraveled(trip.currentDistance);
+      let sLine = lineSliceAlong(fullPathLineString, 0, trip.currentDistance, {
+        units: "miles",
+      });
+      if (sLine.geometry.coordinates.length >= 2) {
+        setShortPathCoords(getPolylineCoordsFromLineString(sLine.geometry));
+      }
       console.log("Accessing inital location");
       Location.getCurrentPositionAsync({
         accuracy: accuracyLevel,
