@@ -17,26 +17,6 @@ import { app, auth, db } from "./firebaseConfig.js";
 import { getDatabase, ref, set } from "firebase/database";
 import { startNewTrip } from "./DatabaseFunctions.js";
 
-/*const u = 'robby';
-const newKey = push(child(ref(db), 'Users')).key;
-const updates = {};
-updates['Users/test/LastName'] = u;
-update(ref(db), updates);
-/*
-set(ref(db, 'Users/' + 'test'), {
-    Username: 'im test',
-    FirstName: 'te',
-    LastName: 'st',
-    totalDistanace: 69.69,
-    tripsCompleted: 10
-});
-
-const userRef = ref(db, 'Users/' + '/mbolnik25' + '/Email');
-onValue(userRef, (snapshot) => {
-    const data = snapshot.val();
-    console.log(data);
-})*/
-
 // TODO: Add error messages
 export default function SignupPage({ navigation }) {
   const [username, setUsername] = useState("LukeZeches");
@@ -75,7 +55,7 @@ export default function SignupPage({ navigation }) {
         FirstName: firstName,
         LastName: lastName,
         Email: email,
-        totalDistanace: 0.0,
+        totalDistance: 0.0,
         tripsCompleted: 0,
         exerciseTime: 0.0,
       });
