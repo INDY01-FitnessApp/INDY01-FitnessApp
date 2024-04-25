@@ -64,12 +64,12 @@ export function updateCurrentTrip(user_id, distance, time) {
   getCurrentTrip(user_id).then((response) => {
     currentTrip = response;
     //add new values
-    const updatedDistance = currentTrip.currentDistance + distance;
+    const updatedDistance = distance;
     const updatedTime = currentTrip.time + time;
 
     //update distance
     const distanceUpdates = {};
-    distanceUpdates["CurrentTrips/" + user_id + "/totalDistance"] =
+    distanceUpdates["CurrentTrips/" + user_id + "/currentDistance"] =
       updatedDistance;
     update(ref(db), distanceUpdates);
 

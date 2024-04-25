@@ -158,6 +158,7 @@ export function TripView({ route }) {
   const [distanceTraveled, setDistanceTraveled] = useState(0);
 
   const [shortPathCoords, setShortPathCoords] = useState([]);
+  const [startTime, setStartTime] = useState(null);
   //#endregion
 
   // Should only run once, does the initial setup of states and location
@@ -177,6 +178,7 @@ export function TripView({ route }) {
       }
       setErrorMsg(null);
       // Initialize states once location permission has been provided
+      setStartTime(Date.now());
       console.log(trip.currentDistance);
       setDistanceTraveled(trip.currentDistance);
       console.log("Accessing inital location");
@@ -310,9 +312,9 @@ export function TripView({ route }) {
     });
   }, []);
 
+  // Update the distance in here
   useInterval(() => {
     if (status == "granted") {
-      // Update the distance in here
       // console.log("Accessing location");
       Location.getCurrentPositionAsync({
         accuracy: accuracyLevel,
@@ -336,6 +338,7 @@ export function TripView({ route }) {
           if (newDist >= route["distanceMeters"] / 1609.344) {
             // TODO: Trip finished
             console.log("Trip completed");
+            endTrip(navigation);
           }
         })
         .catch((err) => {
@@ -352,6 +355,23 @@ export function TripView({ route }) {
 
   function endTrip(navigation) {
     // Update distance traveled in database
+    const id = auth.currentUser.uid;
+    const elapsedTime = Date.now() - startTime;
+
+    dbFunctions.updateCurrentTrip(id, distanceTraveled, elapsedTime);
+    // If the trip is completed, update entries
+    dbFunctions.addTripsCompleted(id); // Increment user's number of trips completed
+    dbFunctions.addCompletedTrip(
+      id,
+      trip.name,
+      trip.originName,
+      trip.origin,
+      trip.destinationName,
+      trip.destination,
+      trip.totalDistance,
+      trip.time
+    ); // Add trip to completed trips table
+    dbFunctions.clearTrip(id); // Unsets the trip as the current trip from the user
 
     // Reroute back to homepage
     navigation.replace("home");
