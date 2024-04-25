@@ -4,6 +4,7 @@ import { StyleSheet } from "react-native";
 import MainView from "./Main";
 import LoginPage from "./Login";
 import SignupPage from "./Signup";
+import ResetPassword from "./Reset_Password"
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Stack.Screen name="login" component={LoginPage} />
         <Stack.Screen name="signup" component={SignupPage} />
         <Stack.Screen name="main" component={MainView} />
+        <Stack.Screen name="resetPassword" component={ResetPassword} />
       </Stack.Navigator>
     </NavigationContainer>
   );
