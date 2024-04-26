@@ -384,7 +384,11 @@ export function TripView({ route }) {
       trip.exerciseTime + elapsedTime
     ); // Add trip to completed trips table
     dbFunctions.clearTrip(id); // Unsets the trip as the current trip from the user
-
+    dbFunctions.updateUserInfo(
+      id,
+      trip.totalDistance,
+      trip.exerciseTime + elapsedTime
+    );
     // Reroute back to homepage
     navigation.replace("home");
     return;
