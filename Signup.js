@@ -14,32 +14,8 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { app, auth, db } from "./firebaseConfig.js";
-import {
-  getDatabase,
-  ref,
-  set,
-} from "firebase/database";
+import { getDatabase, ref, set } from "firebase/database";
 import { startNewTrip } from "./DatabaseFunctions.js";
-
-/*const u = 'robby';
-const newKey = push(child(ref(db), 'Users')).key;
-const updates = {};
-updates['Users/test/LastName'] = u;
-update(ref(db), updates);
-/*
-set(ref(db, 'Users/' + 'test'), {
-    Username: 'im test',
-    FirstName: 'te',
-    LastName: 'st',
-    totalDistanace: 69.69,
-    tripsCompleted: 10
-});
-
-const userRef = ref(db, 'Users/' + '/mbolnik25' + '/Email');
-onValue(userRef, (snapshot) => {
-    const data = snapshot.val();
-    console.log(data);
-})*/
 
 // TODO: Add error messages
 export default function SignupPage({ navigation }) {
@@ -50,12 +26,19 @@ export default function SignupPage({ navigation }) {
   const [lastName, setLastName] = useState("Zeches");
   const [email, setEmail] = useState("zechesl@gmail.com");
   //allows for the creation of a new user
-  async function createUser(email, password, confirmPassword, userName, firstName, lastName) {
+  async function createUser(
+    email,
+    password,
+    confirmPassword,
+    userName,
+    firstName,
+    lastName
+  ) {
     //check if both passwords match
     if (password != confirmPassword) {
-        console.log('Passwords do not match');
-        return;
-     }
+      console.log("Passwords do not match");
+      return;
+    }
     //create a new user with email and password info
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -72,7 +55,7 @@ export default function SignupPage({ navigation }) {
         FirstName: firstName,
         LastName: lastName,
         Email: email,
-        totalDistanace: 0.0,
+        totalDistance: 0.0,
         tripsCompleted: 0,
         exerciseTime: 0.0,
       });
@@ -83,16 +66,13 @@ export default function SignupPage({ navigation }) {
       const errcode = error.code;
       const errmessage = error.message;
       //custom error messages
-      if (errcode == 'auth/invalid-email') {
-          console.log('Invalid Email')
-      }
-      else if (errcode == 'auth/weak-password') {
-          console.log('Password is too weak')
-      }
-      else if (errcode == 'auth/email-already-in-use') {
-          console.log('An account with this email address already exists')
-      }
-      else console.log(errcode, errmessage);
+      if (errcode == "auth/invalid-email") {
+        console.log("Invalid Email");
+      } else if (errcode == "auth/weak-password") {
+        console.log("Password is too weak");
+      } else if (errcode == "auth/email-already-in-use") {
+        console.log("An account with this email address already exists");
+      } else console.log(errcode, errmessage);
     }
   }
   return (
@@ -135,6 +115,7 @@ export default function SignupPage({ navigation }) {
         onChangeText={(text) => setPassword(text)}
         value={password}
         style={styles.textInput}
+        secureTextEntry={true}
       />
       <TextInput
         placeholder="Confirm password"
@@ -142,11 +123,19 @@ export default function SignupPage({ navigation }) {
         onChangeText={(text) => setConfirmPassword(text)}
         value={confirmPassword}
         style={styles.textInput}
+        secureTextEntry={true}
       />
       <Pressable
         style={globalStyles.button}
         onPressOut={() =>
-          createUser(email, password, confirmPassword, username, firstName, lastName)
+          createUser(
+            email,
+            password,
+            confirmPassword,
+            username,
+            firstName,
+            lastName
+          )
         }
       >
         <Text style={globalStyles.buttonText}>Create account</Text>

@@ -4,7 +4,7 @@ import { StyleSheet } from "react-native";
 import MainView from "./Main";
 import LoginPage from "./Login";
 import SignupPage from "./Signup";
-import ResetPassword from "./Reset_Password"
+import ResetPassword from "./ResetPassword";
 
 export default function App() {
   return (

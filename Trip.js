@@ -94,7 +94,7 @@ class Trip {
     this.destinationName = destinationName;
     this.destination = destination;
     this.currentDistance = 0;
-    this.time = 0;
+    this.exerciseTime = 0;
     this.totalDistance = totalDistance;
     this.route = route;
   }
@@ -158,6 +158,7 @@ export function TripView({ route }) {
   const [distanceTraveled, setDistanceTraveled] = useState(0);
 
   const [shortPathCoords, setShortPathCoords] = useState([]);
+  const [startTime, setStartTime] = useState(null);
   //#endregion
 
   // Should only run once, does the initial setup of states and location
@@ -177,7 +178,13 @@ export function TripView({ route }) {
       }
       setErrorMsg(null);
       // Initialize states once location permission has been provided
-      console.log(trip.currentDistance);
+      setStartTime(Date.now());
+      let sLine = lineSliceAlong(fullPathLineString, 0, trip.currentDistance, {
+        units: "miles",
+      });
+      if (sLine.geometry.coordinates.length >= 2) {
+        setShortPathCoords(getPolylineCoordsFromLineString(sLine.geometry));
+      }
       setDistanceTraveled(trip.currentDistance);
       console.log("Accessing inital location");
       Location.getCurrentPositionAsync({
@@ -310,9 +317,9 @@ export function TripView({ route }) {
     });
   }, []);
 
+  // Update the distance in here
   useInterval(() => {
     if (status == "granted") {
-      // Update the distance in here
       // console.log("Accessing location");
       Location.getCurrentPositionAsync({
         accuracy: accuracyLevel,
@@ -336,6 +343,7 @@ export function TripView({ route }) {
           if (newDist >= route["distanceMeters"] / 1609.344) {
             // TODO: Trip finished
             console.log("Trip completed");
+            endTrip(navigation);
           }
         })
         .catch((err) => {
@@ -350,9 +358,37 @@ export function TripView({ route }) {
     }
   }, locationCheckInterval);
 
+  function endSession(navigation) {
+    const id = auth.currentUser.uid;
+    const elapsedTime = Date.now() - startTime;
+
+    dbFunctions.updateCurrentTrip(id, distanceTraveled, elapsedTime);
+    navigation.replace("home");
+  }
   function endTrip(navigation) {
     // Update distance traveled in database
+    const id = auth.currentUser.uid;
+    const elapsedTime = Date.now() - startTime;
 
+    dbFunctions.updateCurrentTrip(id, distanceTraveled, elapsedTime);
+    // If the trip is completed, update entries
+    dbFunctions.addTripsCompleted(id); // Increment user's number of trips completed
+    dbFunctions.addCompletedTrip(
+      id,
+      trip.name,
+      trip.originName,
+      trip.origin,
+      trip.destinationName,
+      trip.destination,
+      trip.totalDistance,
+      trip.exerciseTime + elapsedTime
+    ); // Add trip to completed trips table
+    dbFunctions.clearTrip(id); // Unsets the trip as the current trip from the user
+    dbFunctions.updateUserInfo(
+      id,
+      trip.totalDistance,
+      trip.exerciseTime + elapsedTime
+    );
     // Reroute back to homepage
     navigation.replace("home");
     return;
@@ -423,7 +459,7 @@ export function TripView({ route }) {
           </Text>
           <Pressable
             style={globalStyles.button}
-            onPressOut={() => endTrip(navigation)}
+            onPressOut={() => endSession(navigation)}
           >
             <Text style={globalStyles.buttonText}>End trip</Text>
           </Pressable>
