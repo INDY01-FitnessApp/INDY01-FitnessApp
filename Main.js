@@ -7,16 +7,19 @@ import {
   Pressable,
   Button,
 } from "react-native";
-import { NavigationContainer, useNavigation } from "@react-navigation/native";
+import {
+  NavigationContainer,
+  useNavigation,
+  useFocusEffect,
+} from "@react-navigation/native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import globalStyles from "./GlobalStyles";
 import "react-native-gesture-handler";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NewTripCreator, TripView } from "./Trip";
 import storage from "./LocalStorage";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import Profile from "./Profile";
-import TripMap from "./TripMap";
 import { app, auth, db } from "./firebaseConfig.js";
 import {
   getDatabase,
@@ -36,18 +39,29 @@ function HomeComponent() {
   const [currentTrip, setCurrentTrip] = useState(null);
   const [user, setUser] = useState(null);
   const [username, setUsername] = useState("");
-  let ct = useContext(CurrentTripContext);
+  useFocusEffect(
+    useCallback(() => {
+      console.log("focus main");
+      dbFunctions.getUserInfo(auth.currentUser.uid).then((res) => setUser(res));
+      dbFunctions
+        .getCurrentTrip(auth.currentUser.uid)
+        .then((res) => setCurrentTrip(res));
+
+      return;
+    }, [])
+  );
   useEffect(() => {
-    dbFunctions.getUserInfo(auth.currentUser.uid).then((res) => setUser(res));
-  }, []);
-  useEffect(() => {
-    dbFunctions
-      .getCurrentTrip(auth.currentUser.uid)
-      .then((res) => setCurrentTrip(res));
-  }, []);
-  useEffect(() => {
-    dbFunctions.getUserInfo(auth.currentUser.uid).then((res) => setUser(res));
-  }, []);
+    if (user) setUsername(user.Username);
+  }, [user]);
+  function msToTimeString(ms) {
+    sec = ms / 1000;
+    min = Math.floor(sec / 60);
+    hr = Math.floor(min / 60);
+    minRemaining = min % 60;
+    hrStr = hr.toString().padStart(2, "0");
+    minStr = minRemaining.toString().padStart(2, "0");
+    return `${hrStr}:${minStr}`;
+  }
   return (
     <SafeAreaView style={styles.container}>
       {currentTrip && currentTrip.tripName != "none" ? (
@@ -119,12 +133,6 @@ function HomeComponent() {
           </Pressable>
         </View>
       )}
-      <Button
-        title="Clear data"
-        onPress={() => {
-          storage.remove({ key: "currentTrip" });
-        }}
-      />
     </SafeAreaView>
   );
 }
@@ -172,6 +180,7 @@ export default function MainView({ route }) {
 }
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
+
 const styles = StyleSheet.create({
   container: {
     display: "flex",

@@ -19,12 +19,12 @@ import { startNewTrip } from "./DatabaseFunctions.js";
 
 // TODO: Add error messages
 export default function SignupPage({ navigation }) {
-  const [username, setUsername] = useState("LukeZeches");
-  const [password, setPassword] = useState("123456");
-  const [confirmPassword, setConfirmPassword] = useState("123456");
-  const [firstName, setFirstName] = useState("Luke");
-  const [lastName, setLastName] = useState("Zeches");
-  const [email, setEmail] = useState("zechesl@gmail.com");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   //allows for the creation of a new user
   async function createUser(
     email,
@@ -112,10 +112,10 @@ export default function SignupPage({ navigation }) {
       <TextInput
         placeholder="Password"
         inputMode="text"
+        secureTextEntry={true}
         onChangeText={(text) => setPassword(text)}
         value={password}
         style={styles.textInput}
-        secureTextEntry={true}
       />
       <TextInput
         placeholder="Confirm password"

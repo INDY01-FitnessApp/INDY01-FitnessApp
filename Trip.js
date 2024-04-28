@@ -139,7 +139,7 @@ export function TripView({ route }) {
   // This is such a mess holy shit
   const trip = route.params.trip;
   const locationCheckInterval = 10000; // 1000ms = 1sec
-  const accuracyLevel = Location.Accuracy.Highest;
+  const accuracyLevel = Location.Accuracy.Balanced;
 
   const tripRoute = trip.route;
   const decodedPolyline = PolylineDecoder.decode(
@@ -179,13 +179,19 @@ export function TripView({ route }) {
       setErrorMsg(null);
       // Initialize states once location permission has been provided
       setStartTime(Date.now());
-      let sLine = lineSliceAlong(fullPathLineString, 0, trip.currentDistance, {
-        units: "miles",
-      });
-      if (sLine.geometry.coordinates.length >= 2) {
-        setShortPathCoords(getPolylineCoordsFromLineString(sLine.geometry));
-      }
       setDistanceTraveled(trip.currentDistance);
+      let sLine;
+      try {
+        sLine = lineSliceAlong(fullPathLineString, 0, trip.currentDistance, {
+          units: "miles",
+        });
+        if (sLine.geometry.coordinates.length >= 2) {
+          setShortPathCoords(getPolylineCoordsFromLineString(sLine.geometry));
+        }
+      } catch (e) {
+        console.log(e.name);
+      }
+
       console.log("Accessing inital location");
       Location.getCurrentPositionAsync({
         accuracy: accuracyLevel,
@@ -197,38 +203,6 @@ export function TripView({ route }) {
     });
   }, []);
 
-  // Update the distance in here
-  useInterval(() => {
-    if (status == "granted") {
-      // console.log("Accessing location");
-      Location.getCurrentPositionAsync({
-        accuracy: accuracyLevel,
-      })
-        .then((res) => {
-          // console.log("Location accessed");
-          let { latitude: lat1, longitude: lon1 } = prevLocation.coords;
-          let { latitude: lat2, longitude: lon2 } = res.coords;
-          let dist = distanceLatLon(lat1, lon1, lat2, lon2);
-          setDistanceTraveled(distanceTraveled + dist);
-        })
-        .catch((err) => {
-          console.log(err);
-          if (err["code"] == "E_NO_PERMISSIONS") {
-            setStatus(null);
-            setErrorMsg(
-              "Permission to access location was denied. Please allow location access in your settings."
-            );
-          }
-        });
-    }
-  }, locationCheckInterval);
-
-  // Given a line of given length defined by a set of coordinate pairs and a number from 0.00 - 1.00 p, calculates the line that is p percent along the original line
-  // Not the "correct" way but close enough for a prototype
-  function getLineAlongLine(coords, p) {
-    if (coords.length == 0) return [];
-    return coords.slice(0, Math.floor(coords.length * p));
-  }
   function getPolylineCoordsFromLineString(arr) {
     const coords = [];
     arr.coordinates.forEach((pair) => {
@@ -290,33 +264,6 @@ export function TripView({ route }) {
     }, [delay]);
   }
 
-  // Should only run once, does the initial setup of location
-  useEffect(() => {
-    let _status;
-    console.log("Requesting initial location permissions");
-    Location.requestForegroundPermissionsAsync({
-      accuracy: accuracyLevel,
-    }).then((res) => {
-      _status = res.status;
-      console.log("Initial location permissions: " + _status);
-      if (_status !== "granted") {
-        setErrorMsg(
-          "Permission to access location was denied. Please allow location access in your settings."
-        );
-        return;
-      }
-      setErrorMsg(null);
-      console.log("Accessing inital location");
-      Location.getCurrentPositionAsync({
-        accuracy: accuracyLevel,
-      }).then((res) => {
-        console.log("Initial Location accessed");
-        setPrevLocation(res);
-        setStatus(_status); // Needs to be here so that the repeated location updates don't happen until this happens
-      });
-    });
-  }, []);
-
   // Update the distance in here
   useInterval(() => {
     if (status == "granted") {
@@ -325,18 +272,30 @@ export function TripView({ route }) {
         accuracy: accuracyLevel,
       })
         .then((res) => {
-          // console.log("Location accessed");
           let { latitude: lat1, longitude: lon1 } = prevLocation.coords;
           let { latitude: lat2, longitude: lon2 } = res.coords;
           let dist = distanceLatLon(lat1, lon1, lat2, lon2);
           let newDist = distanceTraveled + dist;
           setDistanceTraveled(distanceTraveled + dist);
           // Update the polyline
-          let sLine = lineSliceAlong(fullPathLineString, 0, newDist, {
-            units: "miles",
-          });
-          if (sLine.geometry.coordinates.length >= 2) {
-            setShortPathCoords(getPolylineCoordsFromLineString(sLine.geometry));
+          let sLine;
+          try {
+            sLine = lineSliceAlong(
+              fullPathLineString,
+              0,
+              trip.currentDistance,
+              {
+                units: "miles",
+              }
+            );
+            if (sLine.geometry.coordinates.length >= 2) {
+              setShortPathCoords(
+                getPolylineCoordsFromLineString(sLine.geometry)
+              );
+            }
+          } catch (e) {
+            console.log(e.message);
+            console.log(fullPathLineString.coordinates.length);
           }
 
           // Check if trip is finished
@@ -363,6 +322,11 @@ export function TripView({ route }) {
     const elapsedTime = Date.now() - startTime;
 
     dbFunctions.updateCurrentTrip(id, distanceTraveled, elapsedTime);
+    dbFunctions.updateUserInfo(
+      id,
+      distanceTraveled,
+      trip.exerciseTime + elapsedTime
+    );
     navigation.replace("home");
   }
   function endTrip(navigation) {
@@ -437,11 +401,15 @@ export function TripView({ route }) {
           strokeColor="#888"
           strokeWidth={2}
         />
-        <Polyline
-          coordinates={shortPathCoords}
-          strokeColor="#00f"
-          strokeWidth={5}
-        />
+        {shortPathCoords.length >= 2 ? (
+          <Polyline
+            coordinates={shortPathCoords}
+            strokeColor="#00f"
+            strokeWidth={5}
+          />
+        ) : (
+          <></>
+        )}
       </MapView>
       {errorMsg ? (
         <View style={styles.tripInfoContainer}>

@@ -43,7 +43,6 @@ export default function LoginPage({ navigation }) {
       .catch((error) => {
         const errcode = error.code;
         const errmessage = error.message;
-        setErrMessage = errmessage;
         if (errcode == "auth/invalid-credential") {
           console.log("Username or Password is incorrect");
           setErrMessage("Username or Password is incorrect");
@@ -71,10 +70,10 @@ export default function LoginPage({ navigation }) {
       <TextInput
         placeholder="Password"
         inputMode="text"
+        secureTextEntry={true}
         onChangeText={(text) => setPassword(text)}
         value={password}
         style={styles.textInput}
-        secureTextEntry={true}
       />
       <Text style={{ fontSize: 15, color: "red", fontWeight: 200 }}>
         {errMessage}

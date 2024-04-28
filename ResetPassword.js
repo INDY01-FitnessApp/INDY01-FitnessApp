@@ -5,8 +5,9 @@ import {
   StyleSheet,
   TextInput,
   Text,
+  View,
 } from "react-native";
-import globalStyles from "./GlobalStyles.js";
+import globalStyles from "./GlobalStyles";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth, db } from "./firebaseConfig.js";
 export default function Reset_Password({ navigation }) {
