@@ -16,7 +16,6 @@ import {
 } from "firebase/auth";
 import { auth, db } from "./firebaseConfig.js";
 import * as dbFunctions from "./DatabaseFunctions.js";
-import { isWhiteSpaceSingleLine } from "./node_modules/typescript/lib/typescript";
 
 export default function LoginPage({ navigation }) {
   const [email, setEmail] = useState("zechesl@gmail.com");
