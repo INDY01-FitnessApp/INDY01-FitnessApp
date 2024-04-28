@@ -38,7 +38,7 @@ function HomeComponent() {
   const navigation = useNavigation();
   const [currentTrip, setCurrentTrip] = useState(null);
   const [user, setUser] = useState(null);
-  const [username, setUsername] = useState("");
+const [username, setUsername] = useState("");
   useFocusEffect(
     useCallback(() => {
       console.log("focus main");
@@ -77,6 +77,7 @@ function HomeComponent() {
             width: "70%",
           }}
         >
+          <Text style={[globalStyles.heading, {textAlign: "center"}] }>Hi {username}!</Text>
           <Text style={[globalStyles.heading, { textAlign: "center" }]}>
             Hi {username}!
           </Text>
@@ -118,7 +119,8 @@ function HomeComponent() {
             height: 180,
             width: "70%",
           }}
-        >
+          >
+            <Text style={[globalStyles.heading, {textAlign: "center"}] }>Hi {username}!</Text>
           <Text style={[globalStyles.heading, { textAlign: "center" }]}>
             Hi {username}!
           </Text>
@@ -194,5 +196,10 @@ const styles = StyleSheet.create({
   tripInfo: {
     color: "white",
     fontSize: 25,
+
   },
+  tripInfo: {
+    color: "white",
+    fontSize: 25
+  }
 });

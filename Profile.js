@@ -20,10 +20,12 @@ async function getUserInfo(user_id) {
   return data;
 }
 export default function Profile() {
+
   const [user, setUser] = useState({});
   // TODO: this runs 5 times???
   useEffect(() => {
     getUserInfo(auth.currentUser.uid).then((res) => {
+
       setUser(res);
     });
   }, []);

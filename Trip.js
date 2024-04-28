@@ -191,7 +191,6 @@ export function TripView({ route }) {
       } catch (e) {
         console.log(e.name);
       }
-
       console.log("Accessing inital location");
       Location.getCurrentPositionAsync({
         accuracy: accuracyLevel,
@@ -263,7 +262,7 @@ export function TripView({ route }) {
       }
     }, [delay]);
   }
-
+  
   // Update the distance in here
   useInterval(() => {
     if (status == "granted") {

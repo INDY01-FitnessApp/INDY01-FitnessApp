@@ -21,6 +21,7 @@ export default function LoginPage({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errMessage, setErrMessage] = useState("");
+
   //allows existing users to login
   function login(email, password) {
     signInWithEmailAndPassword(auth, email, password)
