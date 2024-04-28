@@ -18,9 +18,10 @@ import { auth, db } from "./firebaseConfig.js";
 import * as dbFunctions from "./DatabaseFunctions.js";
 
 export default function LoginPage({ navigation }) {
-  const [email, setEmail] = useState("zechesl@gmail.com");
-  const [password, setPassword] = useState("123456");
-  let [errMessage, setErrMessage] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errMessage, setErrMessage] = useState("");
+
   //allows existing users to login
   function login(email, password) {
     signInWithEmailAndPassword(auth, email, password)
@@ -80,25 +81,7 @@ export default function LoginPage({ navigation }) {
       </Text>
       <Pressable
         style={globalStyles.button}
-        onPressOut={() =>
-          /*signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
-                    const user = userCredential.user;
-                    console.log(`Logged in user ${user.uid}`);
-                    dbFunctions.getCurrentTrip(user.uid).then((trip) => navigation.replace("main", {
-                        currentTrip: trip,
-                    })).catch((error) => {
-                        const errcode = error.code;
-                        const errmessage = error.message;
-                        console.log(errcode, errmessage);
-                    });
-                    
-                }).catch((error) => {
-                    useEffect(() => {
-                        setErrMessage(error.message);
-                    },[])
-                })*/
-          navigation.navigate("resetPassword")
-        }
+        onPressOut={() => navigation.navigate("resetPassword")}
       >
         <Text style={globalStyles.buttonText}>Forgot Password?</Text>
       </Pressable>

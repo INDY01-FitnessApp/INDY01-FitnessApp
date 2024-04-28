@@ -7,16 +7,19 @@ import {
   Pressable,
   Button,
 } from "react-native";
-import { NavigationContainer, useNavigation } from "@react-navigation/native";
+import {
+  NavigationContainer,
+  useNavigation,
+  useFocusEffect,
+} from "@react-navigation/native";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import globalStyles from "./GlobalStyles";
 import "react-native-gesture-handler";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NewTripCreator, TripView } from "./Trip";
 import storage from "./LocalStorage";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import Profile from "./Profile";
-import TripMap from "./TripMap";
 import { app, auth, db } from "./firebaseConfig.js";
 import {
   getDatabase,
@@ -35,28 +38,29 @@ function HomeComponent() {
   const navigation = useNavigation();
   const [currentTrip, setCurrentTrip] = useState(null);
   const [user, setUser] = useState(null);
-  const [username, setUsername] = useState("")
-  let ct = useContext(CurrentTripContext);
+const [username, setUsername] = useState("");
+  useFocusEffect(
+    useCallback(() => {
+      console.log("focus main");
+      dbFunctions.getUserInfo(auth.currentUser.uid).then((res) => setUser(res));
+      dbFunctions
+        .getCurrentTrip(auth.currentUser.uid)
+        .then((res) => setCurrentTrip(res));
+
+      return;
+    }, [])
+  );
   useEffect(() => {
-    dbFunctions.getUserInfo(auth.currentUser.uid).then(res => setUser(res))
-  }, [])
-  useEffect(() => {
-    dbFunctions
-      .getCurrentTrip(auth.currentUser.uid)
-      .then((res) => setCurrentTrip(res));
-  }, []);
-  useEffect(() => {
-    if (user)
-      setUsername(user.Username)
-  }, [user])
+    if (user) setUsername(user.Username);
+  }, [user]);
   function msToTimeString(ms) {
-    sec = ms / 1000
-    min = Math.floor(sec / 60)
-    hr = Math.floor(min / 60)
-    minRemaining = min % 60
-    hrStr = hr.toString().padStart(2, "0")
-    minStr = minRemaining.toString().padStart(2, "0")
-    return `${hrStr}:${minStr}`
+    sec = ms / 1000;
+    min = Math.floor(sec / 60);
+    hr = Math.floor(min / 60);
+    minRemaining = min % 60;
+    hrStr = hr.toString().padStart(2, "0");
+    minStr = minRemaining.toString().padStart(2, "0");
+    return `${hrStr}:${minStr}`;
   }
   return (
     <SafeAreaView style={styles.container}>
@@ -75,6 +79,9 @@ function HomeComponent() {
         >
           <Text style={[globalStyles.heading, {textAlign: "center"}] }>Hi {username}!</Text>
           <Text style={[globalStyles.heading, { textAlign: "center" }]}>
+            Hi {username}!
+          </Text>
+          <Text style={[globalStyles.heading, { textAlign: "center" }]}>
             Ready to exercise?
           </Text>
           <Pressable
@@ -85,10 +92,19 @@ function HomeComponent() {
           >
             <Text style={globalStyles.buttonText}>Continue trip</Text>
           </Pressable>
-          <View >
+          <View>
             <Text style={globalStyles.heading}>{currentTrip.tripName}</Text>
-            <Text style={styles.tripInfo}>Progress: {(currentTrip.currentDistance * 100 / currentTrip.totalDistance).toFixed(2)}%</Text>
-            <Text style={styles.tripInfo}>Time spent: {msToTimeString(currentTrip.exerciseTime)}</Text>
+            <Text style={styles.tripInfo}>
+              Progress:{" "}
+              {(
+                (currentTrip.currentDistance * 100) /
+                currentTrip.totalDistance
+              ).toFixed(2)}
+              %
+            </Text>
+            <Text style={styles.tripInfo}>
+              Time spent: {msToTimeString(currentTrip.exerciseTime)}
+            </Text>
           </View>
         </View>
       ) : (
@@ -105,6 +121,9 @@ function HomeComponent() {
           }}
           >
             <Text style={[globalStyles.heading, {textAlign: "center"}] }>Hi {username}!</Text>
+          <Text style={[globalStyles.heading, { textAlign: "center" }]}>
+            Hi {username}!
+          </Text>
           <Text style={[globalStyles.heading, { textAlign: "center" }]}>
             Ready to start a new trip?
           </Text>
@@ -163,6 +182,7 @@ export default function MainView({ route }) {
 }
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
+
 const styles = StyleSheet.create({
   container: {
     display: "flex",
@@ -171,7 +191,12 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     backgroundColor: globalStyles.palette.backgroundDark,
     alignItems: "center",
-    gap: "20px"
+    gap: "20px",
+  },
+  tripInfo: {
+    color: "white",
+    fontSize: 25,
+
   },
   tripInfo: {
     color: "white",

@@ -20,17 +20,19 @@ async function getUserInfo(user_id) {
   return data;
 }
 export default function Profile() {
-  const [user, setUser] = useState(null);
+
+  const [user, setUser] = useState({});
   // TODO: this runs 5 times???
   useEffect(() => {
-    getUserInfo(id).then((res) => {
+    getUserInfo(auth.currentUser.uid).then((res) => {
+
       setUser(res);
     });
   }, []);
 
   let profileAttrs = [
     { name: "Username", val: user.Username },
-    { name: "Name", val: `${userInfo.FirstName} ${user.LastName}` },
+    { name: "Name", val: `${user.FirstName} ${user.LastName}` },
     { name: "E-mail", val: user.Email },
   ].map((attr) => {
     return (
@@ -52,7 +54,7 @@ export default function Profile() {
   }
   return (
     <SafeAreaView style={styles.container}>
-      {1 == 2 ? (
+      {user.Username ? (
         <View
           style={{
             display: "flex",
@@ -87,7 +89,7 @@ export default function Profile() {
             <Text style={styles.profileItemName}>Time spent exercising</Text>
             <Text style={styles.profileItemValue}>
               {/* This will probably change depending on the format that exercise time is stored in */}
-              {`${msToTimeString(totalDistance.exerciseTime)}`}
+              {`${msToTimeString(user.exerciseTime)}`}
             </Text>
           </View>
         </View>
